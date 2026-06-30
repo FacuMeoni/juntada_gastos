@@ -1,65 +1,179 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ChevronRight, PartyPopper, Wallet } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { AppContainer } from "@/components/layout/app-container";
+import { UserAvatar } from "@/components/user-avatar";
+import { CreateEventDialog } from "@/components/home/create-event-dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { SummaryCard } from "@/components/summary-card";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/format";
+import type { Event } from "@/types";
 
-export default function Home() {
+interface EventCard extends Event {
+  membersCount: number;
+  total: number;
+}
+
+async function getHomeData() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("id, name, alias_cvu, avatar_url")
+    .eq("id", user.id)
+    .single();
+
+  const { data: memberships } = await supabase
+    .from("event_members")
+    .select("event:events(id, name, created_by, created_at)")
+    .eq("user_id", user.id);
+
+  const events =
+    (memberships
+      ?.map((m) => m.event)
+      .filter(Boolean)
+      .flat() as Event[]) ?? [];
+
+  const eventIds = events.map((e) => e.id);
+
+  let totalSpent = 0;
+  const cards: EventCard[] = [];
+
+  if (eventIds.length > 0) {
+    const [{ data: allMembers }, { data: allExpenses }] = await Promise.all([
+      supabase.from("event_members").select("event_id").in("event_id", eventIds),
+      supabase.from("expenses").select("event_id, amount").in("event_id", eventIds),
+    ]);
+
+    const membersByEvent = new Map<string, number>();
+    for (const m of allMembers ?? [])
+      membersByEvent.set(m.event_id, (membersByEvent.get(m.event_id) ?? 0) + 1);
+
+    const totalByEvent = new Map<string, number>();
+    for (const e of allExpenses ?? []) {
+      totalByEvent.set(e.event_id, (totalByEvent.get(e.event_id) ?? 0) + Number(e.amount));
+      totalSpent += Number(e.amount);
+    }
+
+    for (const ev of events) {
+      cards.push({
+        ...ev,
+        membersCount: membersByEvent.get(ev.id) ?? 0,
+        total: totalByEvent.get(ev.id) ?? 0,
+      });
+    }
+
+    cards.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }
+
+  return {
+    profile: profile ?? {
+      id: user.id,
+      name: user.email ?? "Vos",
+      alias_cvu: null,
+      avatar_url: null,
+    },
+    cards,
+    totalSpent,
+  };
+}
+
+export default async function HomePage() {
+  const data = await getHomeData();
+  if (!data) return null;
+
+  const { profile, cards, totalSpent } = data;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <AppContainer className="gap-5 p-4">
+      <header className="flex items-center justify-between pt-2">
+        <div>
+          <p className="text-muted-foreground text-sm">Hola,</p>
+          <h1 className="text-xl font-bold tracking-tight">{profile.name}</h1>
+        </div>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Link
+            href="/perfil"
+            aria-label="Ir a mi perfil"
+            className="rounded-full ring-offset-2 transition focus-visible:ring-2"
+          >
+            <UserAvatar
+              name={profile.name}
+              avatarUrl={profile.avatar_url}
+              size="lg"
+            />
+          </Link>
+        </div>
+      </header>
+
+      <SummaryCard
+        icon={<Wallet className="size-6" />}
+        primary={{
+          label: "Gastado en todas tus juntadas",
+          value: formatCurrency(totalSpent),
+        }}
+      />
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">Tus juntadas</h2>
+          {cards.length > 0 && <CreateEventDialog />}
+        </div>
+
+        {cards.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <ul className="space-y-2.5">
+            {cards.map((ev) => (
+              <li key={ev.id}>
+                <Link href={`/${ev.id}`}>
+                  <Card className="transition active:scale-[0.99]">
+                    <CardContent className="flex items-center gap-3">
+                      <div className="icon-surface text-foreground flex size-10 items-center justify-center rounded-xl">
+                        <PartyPopper className="size-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{ev.name}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {ev.membersCount}{" "}
+                          {ev.membersCount === 1 ? "persona" : "personas"} ·{" "}
+                          {formatCurrency(ev.total)}
+                        </p>
+                      </div>
+                      <ChevronRight className="text-muted-foreground size-5 shrink-0" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </AppContainer>
+  );
+}
+
+function EmptyState() {
+  return (
+    <Card className="border-dashed">
+      <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+        <div className="bg-muted flex size-14 items-center justify-center rounded-2xl">
+          <PartyPopper className="text-muted-foreground size-7" />
+        </div>
+        <div className="space-y-1">
+          <p className="font-medium">Todavía no tenés juntadas</p>
+          <p className="text-muted-foreground text-sm text-balance">
+            Creá tu primera juntada para empezar a dividir gastos.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <CreateEventDialog variant="inline" />
+      </CardContent>
+    </Card>
   );
 }

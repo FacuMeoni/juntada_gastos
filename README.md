@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JuntadasApp 💸
 
-## Getting Started
+PWA mobile-first para dividir gastos entre amigos (viajes, asados, eventos) y saldar cuentas con el mínimo de transferencias.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) + **React 19**
+- **Tailwind CSS v4** + **shadcn/ui** (Base UI) + **Lucide**
+- **Supabase** (Auth, Postgres + RLS, Storage)
+
+## Arquitectura de datos (modelo híbrido)
+
+El corazón del sistema es la tabla **`event_members`**, que une un evento con una persona:
+
+- `user_id` **NOT NULL** → amigo con cuenta real.
+- `user_id` **NULL** + `guest_name` → amigo **gestionado a mano** (sin cuenta).
+
+`expenses` y `payments` referencian **`event_members.id`** (nunca `users.id`), por
+lo que el cálculo de saldos funciona idéntico para ambos tipos de participante.
+
+```
+users ──< events ──< event_members ──< expenses ──< expense_splits
+                              └──────< payments
+```
+
+## Puesta en marcha
+
+El proyecto ya está **conectado a un proyecto Supabase hosted** (`juntadas-app`,
+ref `encctvjcrhlemeoyowha`, región `sa-east-1`). El esquema vive en
+`supabase/migrations/` y ya fue aplicado a la nube.
+
+1. Instalar dependencias:
+
+```bash
+npm install
+```
+
+2. El archivo `.env.local` ya está generado con la URL y la publishable key del
+   proyecto. (Plantilla en `.env.local.example`.)
+
+3. Levantar el entorno de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> Para el login con Google, habilitá el provider en
+> **Supabase → Authentication → Providers**. El magic link por email funciona
+> sin configuración extra.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Trabajar con el esquema (Supabase CLI)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+supabase migration new <nombre>   # nueva migración
+supabase db push                  # aplicar migraciones al proyecto remoto
+supabase migration list --linked  # ver estado local vs remoto
+```
 
-## Learn More
+## Lógica de negocio
 
-To learn more about Next.js, take a look at the following resources:
+`src/lib/debt.ts` contiene el núcleo de cálculo (funciones puras, trabajan en
+centavos para evitar errores de redondeo):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `computeBalancesCents` → saldo neto de cada participante.
+- `minimizeTransfersCents` → algoritmo greedy que minimiza la cantidad de
+  transferencias (a lo sumo `n − 1` para `n` personas).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+El hook `useDebtCalculation(eventId)` (`src/hooks/`) trae los datos de Supabase
+y aplica esa lógica.
 
-## Deploy on Vercel
+Tests rápidos de la lógica:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx tsx scripts/check-debt.mts
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estructura de rutas
+
+| Ruta                      | Descripción                                  |
+| ------------------------- | -------------------------------------------- |
+| `/`                       | Inicio: resumen + lista de juntadas          |
+| `/perfil`                 | Editar nombre, alias/CVU y foto              |
+| `/[eventId]`              | Juntada → tab **Gastos**                     |
+| `/[eventId]/saldar`       | Saldos + cómo saldar (transferencias mínimas)|
+| `/[eventId]/historial`    | Gastos y pagos cronológicos                  |
+| `/[eventId]/ajustes`      | Invitar, agregar gestionados, eliminar       |
+| `/invite/[eventId]`       | Sumarse a una juntada vía link               |
+| `/login`                  | Magic link + Google                          |
+
+## Scripts
+
+```bash
+npm run dev     # desarrollo
+npm run build   # build de producción
+npm run lint    # eslint
+```
+
+> **Pendiente opcional:** agregar los íconos PWA `public/icon-192.png` y
+> `public/icon-512.png` (referenciados por el manifest).

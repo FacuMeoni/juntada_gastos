@@ -1,0 +1,2 @@
+/** Script bloqueante para aplicar el tema antes del primer paint (evita flash). */
+export const THEME_INIT_SCRIPT = `(function(){try{var d=document.documentElement,c=d.classList;c.remove("light","dark");var t=localStorage.getItem("theme");var s=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";var r=t==="system"||!t?s:t==="dark"||t==="light"?t:s;c.add(r);d.style.colorScheme=r}catch(e){}})();`;

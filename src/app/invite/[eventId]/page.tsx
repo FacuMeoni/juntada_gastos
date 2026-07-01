@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { joinEvent } from "@/app/actions";
+import { ensureEventMember } from "@/lib/join-event";
 
 /**
  * Flujo de invitación.
@@ -23,9 +23,8 @@ export default async function InvitePage({
     redirect(`/login?next=${encodeURIComponent(`/invite/${eventId}`)}`);
   }
 
-  const res = await joinEvent(eventId);
+  const res = await ensureEventMember(supabase, user.id, eventId);
   if (res.error) {
-    // Si el evento no existe o no se pudo unir, lo mandamos al inicio.
     redirect("/?error=invite");
   }
 

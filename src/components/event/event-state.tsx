@@ -11,7 +11,7 @@ export function EventStateGuard({
   scroll = true,
 }: {
   children: React.ReactNode;
-  /** Si es false, el scroll queda a cargo del contenido (p. ej. tab Gastos). */
+  /** Si es false, el scroll queda a cargo del contenido hijo. */
   scroll?: boolean;
 }) {
   const { loading, error, debt } = useEvent();
@@ -30,7 +30,7 @@ export function EventStateGuard({
   if (error) {
     return (
       <div className="text-muted-foreground flex flex-col items-center gap-2 py-12 text-center text-sm">
-        <AlertCircle className="text-destructive size-8" />
+        <AlertCircle className="text-foreground size-8" />
         <p>No se pudieron cargar los datos.</p>
         <p className="text-xs">{error}</p>
       </div>
@@ -40,8 +40,8 @@ export function EventStateGuard({
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-1 flex-col",
-        scroll ? "overflow-y-auto overscroll-y-contain" : "overflow-hidden",
+        "min-h-0 flex-1",
+        scroll && "overflow-y-auto overscroll-y-contain",
       )}
     >
       {children}

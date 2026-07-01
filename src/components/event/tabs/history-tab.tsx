@@ -108,7 +108,7 @@ function HistoryRow({ item }: { item: TimelineItem }) {
           <div
             className={
               isPayment
-                ? "bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl"
+                ? "icon-surface text-foreground flex size-10 items-center justify-center rounded-xl"
                 : "bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-xl"
             }
           >
@@ -129,7 +129,7 @@ function HistoryRow({ item }: { item: TimelineItem }) {
             <Button
               variant="ghost"
               size="icon-sm"
-              className="text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-foreground"
               onClick={handleDelete}
               disabled={isPending}
               aria-label="Eliminar"

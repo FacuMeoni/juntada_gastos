@@ -7,9 +7,9 @@ import { toast } from "sonner";
 import {
   addManagedMember,
   deleteEvent,
-  removeMember,
 } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
+import { RemoveManagedMemberDialog } from "@/components/event/remove-managed-member-dialog";
 import { EventStateGuard } from "@/components/event/event-state";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export function SettingsTab() {
           <Label>Participantes</Label>
           <ul className="space-y-2">
             {members.map((m) => (
-              <MemberRow key={m.id} memberId={m.id} canRemove={isOwner} />
+              <MemberRow key={m.id} memberId={m.id} />
             ))}
           </ul>
         </section>
@@ -135,34 +135,15 @@ function AddMemberSection({ eventId }: { eventId: string }) {
   );
 }
 
-function MemberRow({
-  memberId,
-  canRemove,
-}: {
-  memberId: string;
-  canRemove: boolean;
-}) {
-  const router = useRouter();
-  const { eventId, members, refetch } = useEvent();
-  const [isPending, startTransition] = useTransition();
+function MemberRow({ memberId }: { memberId: string }) {
+  const { members, isOwner } = useEvent();
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   const member = members.find((m) => m.id === memberId);
   if (!member) return null;
 
   const isGuest = member.user_id === null;
-
-  const handleRemove = () => {
-    startTransition(async () => {
-      const res = await removeMember(eventId, memberId);
-      if (res.error) {
-        toast.error(res.error);
-        return;
-      }
-      toast.success("Participante eliminado");
-      await refetch();
-      router.refresh();
-    });
-  };
+  const canRemove = isOwner && isGuest;
 
   return (
     <li>
@@ -183,16 +164,21 @@ function MemberRow({
             <Button
               variant="ghost"
               size="icon-sm"
-              className="text-muted-foreground hover:text-destructive"
-              onClick={handleRemove}
-              disabled={isPending}
-              aria-label="Quitar participante"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => setRemoveOpen(true)}
+              aria-label="Quitar participante gestionado"
             >
               <Trash2 className="size-4" />
             </Button>
           )}
         </CardContent>
       </Card>
+
+      <RemoveManagedMemberDialog
+        member={member}
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+      />
     </li>
   );
 }

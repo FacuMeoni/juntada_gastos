@@ -38,7 +38,7 @@ export function BottomNav({ items }: { items: BottomNavItem[] }) {
               className={cn(
                 "flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors",
                 isActive
-                  ? "text-primary"
+                  ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

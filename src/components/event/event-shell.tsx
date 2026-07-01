@@ -1,6 +1,6 @@
 "use client";
 
-import { History, Receipt, ArrowLeftRight, Settings } from "lucide-react";
+import { History, Home, ArrowLeftRight, Settings } from "lucide-react";
 import { AppContainer } from "@/components/layout/app-container";
 import { BottomNav, type BottomNavItem } from "@/components/layout/bottom-nav";
 import { EventProvider } from "@/components/event/event-context";
@@ -20,7 +20,7 @@ export function EventShell({
   children: React.ReactNode;
 }) {
   const items: BottomNavItem[] = [
-    { href: `/${eventId}`, label: "Gastos", icon: Receipt, exact: true },
+    { href: `/${eventId}`, label: "Inicio", icon: Home, exact: true },
     { href: `/${eventId}/saldar`, label: "Saldar", icon: ArrowLeftRight },
     { href: `/${eventId}/historial`, label: "Historial", icon: History },
     { href: `/${eventId}/ajustes`, label: "Ajustes", icon: Settings },
@@ -36,7 +36,7 @@ export function EventShell({
       <AppContainer withBottomNav>
         <EventHeader />
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+        <div className="flex min-h-0 flex-1 flex-col p-4">
           {children}
         </div>
       </AppContainer>

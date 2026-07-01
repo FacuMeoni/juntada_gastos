@@ -159,7 +159,7 @@ export function ProfileForm({
       <Button
         type="button"
         variant="ghost"
-        className="text-destructive w-full"
+        className="text-foreground w-full"
         onClick={() => startTransition(async () => void (await signOut()))}
       >
         <LogOut className="size-4" />

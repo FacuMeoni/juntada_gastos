@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { ensureEventMember } from "@/lib/join-event";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ActionResult<T = undefined> {
@@ -139,39 +140,109 @@ export async function addManagedMember(
   return {};
 }
 
-export async function removeMember(
-  eventId: string,
-  memberId: string,
-): Promise<ActionResult> {
-  const { supabase } = await requireUser();
-  const { error } = await supabase
+export async function removeManagedMember(input: {
+  eventId: string;
+  memberId: string;
+  /** Borra los gastos que pagó el participante, o los reasigna a otro miembro. */
+  strategy: "delete_expenses" | "reassign_expenses";
+  reassignToMemberId?: string;
+}): Promise<ActionResult> {
+  const { supabase, user } = await requireUser();
+
+  const { data: event } = await supabase
+    .from("events")
+    .select("id")
+    .eq("id", input.eventId)
+    .eq("created_by", user.id)
+    .maybeSingle();
+
+  if (!event) {
+    return { error: "Solo el creador de la juntada puede eliminar participantes." };
+  }
+
+  const { data: member } = await supabase
+    .from("event_members")
+    .select("id, user_id")
+    .eq("id", input.memberId)
+    .eq("event_id", input.eventId)
+    .maybeSingle();
+
+  if (!member) return { error: "Participante no encontrado." };
+  if (member.user_id) {
+    return { error: "Solo podés eliminar participantes gestionados sin cuenta." };
+  }
+
+  if (input.strategy === "reassign_expenses") {
+    if (!input.reassignToMemberId) {
+      return { error: "Elegí a quién reasignar los gastos." };
+    }
+    if (input.reassignToMemberId === input.memberId) {
+      return { error: "Elegí un participante distinto." };
+    }
+
+    const { data: target } = await supabase
+      .from("event_members")
+      .select("id")
+      .eq("id", input.reassignToMemberId)
+      .eq("event_id", input.eventId)
+      .maybeSingle();
+
+    if (!target) return { error: "El participante destino no pertenece a la juntada." };
+  }
+
+  const { error: paymentsError } = await supabase
+    .from("payments")
+    .delete()
+    .eq("event_id", input.eventId)
+    .or(
+      `from_member.eq.${input.memberId},to_member.eq.${input.memberId}`,
+    );
+
+  if (paymentsError) return { error: paymentsError.message };
+
+  const { error: splitsError } = await supabase
+    .from("expense_splits")
+    .delete()
+    .eq("member_id", input.memberId);
+
+  if (splitsError) return { error: splitsError.message };
+
+  if (input.strategy === "delete_expenses") {
+    const { error: expensesError } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("event_id", input.eventId)
+      .eq("paid_by", input.memberId);
+
+    if (expensesError) return { error: expensesError.message };
+  } else {
+    const { error: reassignError } = await supabase
+      .from("expenses")
+      .update({ paid_by: input.reassignToMemberId! })
+      .eq("event_id", input.eventId)
+      .eq("paid_by", input.memberId);
+
+    if (reassignError) return { error: reassignError.message };
+  }
+
+  const { error: memberError } = await supabase
     .from("event_members")
     .delete()
-    .eq("id", memberId);
-  if (error) return { error: error.message };
-  revalidatePath(`/${eventId}`);
+    .eq("id", input.memberId);
+
+  if (memberError) return { error: memberError.message };
+
+  revalidatePath(`/${input.eventId}`);
   return {};
 }
 
-/** Une al usuario logueado a un evento (flujo de invitación). */
+/** Une al usuario logueado a un evento (desde formularios / client actions). */
 export async function joinEvent(eventId: string): Promise<ActionResult> {
   const { supabase, user } = await requireUser();
-
-  const { data: existing } = await supabase
-    .from("event_members")
-    .select("id")
-    .eq("event_id", eventId)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (existing) return {}; // ya es miembro, idempotente
-
-  const { error } = await supabase
-    .from("event_members")
-    .insert({ event_id: eventId, user_id: user.id });
-
-  if (error) return { error: error.message };
+  const res = await ensureEventMember(supabase, user.id, eventId);
+  if (res.error) return { error: res.error };
   revalidatePath(`/${eventId}`);
+  revalidatePath("/");
   return {};
 }
 

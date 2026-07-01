@@ -41,41 +41,36 @@ export function ExpensesTab() {
   const summary = myBalanceSummary(myBalance);
 
   return (
-    <EventStateGuard scroll={false}>
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="shrink-0 space-y-4">
-          <SummaryCard
-            icon={<Wallet className="size-6" />}
-            primary={{
-              label: "Total gastado",
-              value: formatCurrency(debt?.totalSpent ?? 0),
-            }}
-            secondary={{
-              label: summary.label,
-              value: summary.value,
-              muted: summary.settled,
-            }}
-          />
-          <AddExpenseDialog />
-        </div>
+    <EventStateGuard>
+      <div className="flex flex-col gap-4 pb-2">
+        <SummaryCard
+          icon={<Wallet className="size-6" />}
+          primary={{
+            label: "Total gastado",
+            value: formatCurrency(debt?.totalSpent ?? 0),
+          }}
+          secondary={{
+            label: summary.label,
+            value: summary.value,
+            muted: summary.settled,
+          }}
+        />
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-          {expenses.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              Todavía no hay gastos. ¡Agregá el primero!
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {expenses.map((e) => (
-                <ExpenseRow key={e.id} expense={e} />
-              ))}
-            </ul>
-          )}
-        </div>
+        <AddExpenseDialog />
 
-        <div className="shrink-0">
-          <DebtorsCard />
-        </div>
+        {expenses.length === 0 ? (
+          <p className="text-muted-foreground py-8 text-center text-sm">
+            Todavía no hay gastos. ¡Agregá el primero!
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {expenses.map((e) => (
+              <ExpenseRow key={e.id} expense={e} />
+            ))}
+          </ul>
+        )}
+
+        <DebtorsCard />
       </div>
     </EventStateGuard>
   );
@@ -94,7 +89,7 @@ function ExpenseRow({ expense }: { expense: Expense }) {
     <>
       <li>
         <Card
-          className="cursor-pointer transition-colors hover:bg-muted/30 active:scale-[0.99]"
+          className="cursor-pointer transition-colors hover:bg-muted/30"
           onClick={() => setDetailOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {

@@ -127,7 +127,7 @@ export function LoginForm() {
     return (
       <Card>
         <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
-          <CheckCircle2 className="text-primary size-10" />
+          <CheckCircle2 className="text-foreground size-10" />
           <div>
             <p className="font-semibold">Revisá tu correo</p>
             <p className="text-muted-foreground text-sm">
@@ -153,7 +153,7 @@ export function LoginForm() {
     <Card>
       <CardContent className="space-y-4 pt-6">
         {authError && (
-          <div className="bg-destructive/10 text-destructive flex items-start gap-2 rounded-md p-3 text-sm">
+          <div className="bg-muted text-foreground flex items-start gap-2 rounded-md p-3 text-sm">
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
             <span>
               El link de acceso es inválido o expiró. Probá con email y
@@ -225,7 +225,7 @@ export function LoginForm() {
               ¿No tenés cuenta?{" "}
               <button
                 type="button"
-                className="text-primary font-medium hover:underline"
+                className="text-foreground font-medium hover:underline"
                 onClick={() => setMode("signup")}
               >
                 Crear una
@@ -237,7 +237,7 @@ export function LoginForm() {
               ¿Ya tenés cuenta?{" "}
               <button
                 type="button"
-                className="text-primary font-medium hover:underline"
+                className="text-foreground font-medium hover:underline"
                 onClick={() => setMode("signin")}
               >
                 Iniciar sesión

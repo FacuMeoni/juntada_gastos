@@ -164,7 +164,7 @@ export function AddExpenseDialog() {
                     className={cn(
                       "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition",
                       active
-                        ? "border-primary bg-primary/10 text-primary"
+                        ? "border-foreground bg-muted text-foreground"
                         : "border-input text-muted-foreground",
                     )}
                   >

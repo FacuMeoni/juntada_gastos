@@ -19,7 +19,7 @@ export function AppContainer({
       className={cn(
         "bg-background relative mx-auto flex w-full max-w-md flex-col shadow-sm",
         withBottomNav
-          ? "h-dvh max-h-dvh overflow-hidden pb-20"
+          ? "h-dvh max-h-dvh flex flex-col pb-20"
           : "min-h-dvh",
         className,
       )}

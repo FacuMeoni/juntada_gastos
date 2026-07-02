@@ -39,6 +39,14 @@ export interface Member {
   user?: Pick<User, "id" | "name" | "avatar_url" | "alias_cvu"> | null;
 }
 
+/** Usuario real con quien compartiste juntadas (para invitar al crear). */
+export interface FrequentContact {
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  sharedEventsCount: number;
+}
+
 /** Un gasto pagado por un participante del evento. */
 export interface Expense {
   id: string;

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ensureEventMember } from "@/lib/join-event";
 import { createClient } from "@/lib/supabase/server";
+import type { FrequentContact } from "@/types";
 
 export interface ActionResult<T = undefined> {
   error?: string;
@@ -89,10 +90,77 @@ export async function updateProfile(input: {
 // Eventos
 // -----------------------------------------------------------------------------
 
-export async function createEvent(name: string): Promise<ActionResult<string>> {
+export async function getFrequentContacts(): Promise<
+  ActionResult<FrequentContact[]>
+> {
   const { supabase, user } = await requireUser();
 
-  const cleanName = name.trim();
+  const { data: myMemberships, error: membershipsError } = await supabase
+    .from("event_members")
+    .select("event_id")
+    .eq("user_id", user.id);
+
+  if (membershipsError) return { error: membershipsError.message };
+
+  const eventIds = (myMemberships ?? []).map((m) => m.event_id);
+  if (eventIds.length === 0) return { data: [] };
+
+  const { data: coMembers, error: coMembersError } = await supabase
+    .from("event_members")
+    .select("user_id, event_id, user:users(id, name, avatar_url)")
+    .in("event_id", eventIds)
+    .not("user_id", "is", null)
+    .neq("user_id", user.id);
+
+  if (coMembersError) return { error: coMembersError.message };
+
+  const byUser = new Map<
+    string,
+    { name: string; avatarUrl: string | null; eventIds: Set<string> }
+  >();
+
+  for (const row of coMembers ?? []) {
+    if (!row.user_id) continue;
+    const rawUser = row.user;
+    const profile = (Array.isArray(rawUser) ? rawUser[0] : rawUser) as {
+      id: string;
+      name: string;
+      avatar_url: string | null;
+    } | null;
+    if (!profile) continue;
+
+    const existing = byUser.get(row.user_id);
+    if (existing) {
+      existing.eventIds.add(row.event_id);
+      continue;
+    }
+
+    byUser.set(row.user_id, {
+      name: profile.name,
+      avatarUrl: profile.avatar_url,
+      eventIds: new Set([row.event_id]),
+    });
+  }
+
+  const contacts: FrequentContact[] = Array.from(byUser.entries())
+    .map(([userId, info]) => ({
+      userId,
+      name: info.name,
+      avatarUrl: info.avatarUrl,
+      sharedEventsCount: info.eventIds.size,
+    }))
+    .sort((a, b) => b.sharedEventsCount - a.sharedEventsCount);
+
+  return { data: contacts };
+}
+
+export async function createEvent(input: {
+  name: string;
+  memberUserIds?: string[];
+}): Promise<ActionResult<string>> {
+  const { supabase, user } = await requireUser();
+
+  const cleanName = input.name.trim();
   if (!cleanName) return { error: "Poné un nombre para la juntada." };
 
   const { data: event, error } = await supabase
@@ -103,14 +171,29 @@ export async function createEvent(name: string): Promise<ActionResult<string>> {
 
   if (error || !event) return { error: error?.message ?? "No se pudo crear." };
 
-  // El creador se une automáticamente como participante real.
   const { error: memberError } = await supabase
     .from("event_members")
     .insert({ event_id: event.id, user_id: user.id });
 
   if (memberError) return { error: memberError.message };
 
+  const extraUserIds = [
+    ...new Set((input.memberUserIds ?? []).filter((id) => id !== user.id)),
+  ];
+
+  if (extraUserIds.length > 0) {
+    const { error: inviteError } = await supabase.from("event_members").insert(
+      extraUserIds.map((userId) => ({
+        event_id: event.id,
+        user_id: userId,
+      })),
+    );
+
+    if (inviteError) return { error: inviteError.message };
+  }
+
   revalidatePath("/");
+  revalidatePath(`/${event.id}`);
   return { data: event.id };
 }
 

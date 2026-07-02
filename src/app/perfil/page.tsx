@@ -3,7 +3,6 @@ import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppContainer } from "@/components/layout/app-container";
 import { ProfileForm } from "@/components/profile/profile-form";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -29,7 +28,6 @@ export default async function ProfilePage() {
           <ChevronLeft className="size-5" />
         </Link>
         <h1 className="text-xl font-bold tracking-tight">Mi perfil</h1>
-        <ThemeToggle className="ml-auto" />
       </header>
 
       <ProfileForm

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ChevronRight, PartyPopper, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppContainer } from "@/components/layout/app-container";
@@ -85,7 +86,7 @@ async function getHomeData() {
 
 export default async function HomePage() {
   const data = await getHomeData();
-  if (!data) return null;
+  if (!data) redirect("/login");
 
   const { profile, cards, totalSpent } = data;
 

@@ -101,7 +101,7 @@ function ExpenseRow({ expense }: { expense: Expense }) {
           tabIndex={0}
         >
           <CardContent className="flex items-center gap-3">
-            <div className="icon-surface text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
+            <div className="icon-surface text-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
               <Receipt className="size-5" />
             </div>
             <div className="min-w-0 flex-1">

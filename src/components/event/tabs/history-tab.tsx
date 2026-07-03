@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, Receipt, Trash2 } from "lucide-react";
+import { ArrowLeftRight, Pencil, Receipt, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteExpense, deletePayment } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
+import { EditExpenseDialog } from "@/components/event/edit-expense-dialog";
+import { EditPaymentDialog } from "@/components/event/edit-payment-dialog";
 import { EventStateGuard } from "@/components/event/event-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { memberDisplayName } from "@/lib/debt";
 import { canManageExpense } from "@/lib/expense";
-import { formatCurrency } from "@/lib/format";
+import { canManagePayment } from "@/lib/payment";
+import { formatCurrency, formatTime } from "@/lib/format";
 
 type TimelineItem = {
   id: string;
@@ -74,14 +77,21 @@ export function HistoryTab() {
 
 function HistoryRow({ item }: { item: TimelineItem }) {
   const router = useRouter();
-  const { eventId, expenses, currentMemberId, refetch } = useEvent();
+  const { eventId, expenses, payments, currentMemberId, isOwner, refetch } =
+    useEvent();
+  const [editOpen, setEditOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const expense =
     item.kind === "expense" ? expenses.find((e) => e.id === item.id) : null;
-  const canDelete =
-    item.kind === "payment" ||
-    (expense ? canManageExpense(expense, currentMemberId) : false);
+  const payment =
+    item.kind === "payment" ? payments.find((p) => p.id === item.id) : null;
+
+  const canManage = expense
+    ? canManageExpense(expense, currentMemberId, isOwner)
+    : payment
+      ? canManagePayment(payment, currentMemberId, isOwner)
+      : false;
 
   const handleDelete = () => {
     startTransition(async () => {
@@ -102,43 +112,89 @@ function HistoryRow({ item }: { item: TimelineItem }) {
   const isPayment = item.kind === "payment";
 
   return (
-    <li>
-      <Card>
-        <CardContent className="flex items-center gap-3">
-          <div
-            className={
-              isPayment
-                ? "icon-surface text-foreground flex size-10 items-center justify-center rounded-xl"
-                : "bg-muted text-muted-foreground flex size-10 items-center justify-center rounded-xl"
-            }
-          >
-            {isPayment ? (
-              <ArrowLeftRight className="size-5" />
-            ) : (
-              <Receipt className="size-5" />
+    <>
+      <li>
+        <Card>
+          <CardContent className="flex items-center gap-3">
+            <div className="icon-surface text-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
+              {isPayment ? (
+                <ArrowLeftRight className="size-5" />
+              ) : (
+                <Receipt className="size-5" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-baseline gap-1.5">
+                <span className="min-w-0 truncate font-medium leading-tight">
+                  {item.title}
+                </span>
+                <span
+                  className="text-muted-foreground/50 shrink-0 text-[10px] leading-none"
+                  aria-hidden
+                >
+                  •
+                </span>
+                <span className="shrink-0 font-semibold tabular-nums leading-tight">
+                  {formatCurrency(item.amount)}
+                </span>
+              </div>
+              <div className="text-muted-foreground mt-1 flex min-w-0 items-center gap-1.5 text-xs leading-tight">
+                <span className="min-w-0 truncate">{item.subtitle}</span>
+                <span
+                  className="text-muted-foreground/50 shrink-0 text-[10px] leading-none"
+                  aria-hidden
+                >
+                  •
+                </span>
+                <span className="shrink-0 tabular-nums">
+                  {formatTime(item.createdAt)}
+                </span>
+              </div>
+            </div>
+
+            {canManage && (
+              <div className="flex shrink-0 items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => setEditOpen(true)}
+                  disabled={isPending}
+                  aria-label="Editar"
+                >
+                  <Pencil className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  aria-label="Eliminar"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
             )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{item.title}</p>
-            <p className="text-muted-foreground truncate text-xs">
-              {item.subtitle}
-            </p>
-          </div>
-          <p className="font-semibold">{formatCurrency(item.amount)}</p>
-          {canDelete && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={handleDelete}
-              disabled={isPending}
-              aria-label="Eliminar"
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-    </li>
+          </CardContent>
+        </Card>
+      </li>
+
+      {expense && (
+        <EditExpenseDialog
+          expense={expense}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+        />
+      )}
+      {payment && (
+        <EditPaymentDialog
+          payment={payment}
+          open={editOpen}
+          onOpenChange={setEditOpen}
+        />
+      )}
+    </>
   );
 }

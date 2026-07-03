@@ -26,11 +26,25 @@ export default async function EventLayout({
 
   if (!event) notFound();
 
+  const isOwner = event.created_by === user.id;
+
+  if (!isOwner) {
+    const { data: membership } = await supabase
+      .from("event_members")
+      .select("status")
+      .eq("event_id", eventId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!membership || membership.status !== "active") {
+      notFound();
+    }
+  }
   return (
     <EventShell
       eventId={event.id}
       eventName={event.name}
-      isOwner={event.created_by === user.id}
+      isOwner={isOwner}
       currentUserId={user.id}
     >
       {children}

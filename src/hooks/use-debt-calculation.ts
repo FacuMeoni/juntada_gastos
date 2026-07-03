@@ -54,9 +54,10 @@ export function useDebtCalculation(
         supabase
           .from("event_members")
           .select(
-            "id, event_id, user_id, guest_name, created_at, user:users(id, name, avatar_url, alias_cvu)",
+            "id, event_id, user_id, guest_name, status, invited_by, created_at, user:users!user_id(id, name, avatar_url, alias_cvu)",
           )
           .eq("event_id", eventId)
+          .eq("status", "active")
           .order("created_at", { ascending: true }),
         supabase
           .from("expenses")
@@ -67,7 +68,9 @@ export function useDebtCalculation(
           .order("created_at", { ascending: false }),
         supabase
           .from("payments")
-          .select("id, event_id, from_member, to_member, amount, created_at")
+          .select(
+            "id, event_id, from_member, to_member, amount, created_at, created_by",
+          )
           .eq("event_id", eventId)
           .order("created_at", { ascending: false }),
       ]);

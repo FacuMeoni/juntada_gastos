@@ -301,7 +301,7 @@ export function CreateEventDialog({
               <DialogTitle>¡Listo!</DialogTitle>
               <DialogDescription>
                 {selected.size > 0
-                  ? `Sumaste ${selected.size} ${selected.size === 1 ? "persona" : "personas"}. Compartí el link con quien falte.`
+                  ? `Enviaste invitación a ${selected.size} ${selected.size === 1 ? "persona" : "personas"}. Van a verla en su inicio y pueden aceptar o rechazar. Compartí el link con quien falte.`
                   : "Compartí el link para invitar a quien quieras."}
               </DialogDescription>
             </DialogHeader>

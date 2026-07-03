@@ -31,7 +31,7 @@ export function ExpenseDetailDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const { eventId, members, currentMemberId, refetch } = useEvent();
+  const { eventId, members, currentMemberId, isOwner, refetch } = useEvent();
   const [editOpen, setEditOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -40,7 +40,7 @@ export function ExpenseDetailDialog({
 
   const payer = memberOf(expense.paid_by);
   const creator = memberOf(expense.created_by);
-  const canManage = canManageExpense(expense, currentMemberId);
+  const canManage = canManageExpense(expense, currentMemberId, isOwner);
 
   const splitMembers = getSplitSummary(expense, members);
 

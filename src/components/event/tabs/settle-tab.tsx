@@ -1,16 +1,11 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
-  Loader2,
   PartyPopper,
   Plus,
 } from "lucide-react";
-import { toast } from "sonner";
-import { addPayment } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
 import { customAvatarUrl } from "@/lib/avatar";
 import { EventStateGuard } from "@/components/event/event-state";
@@ -24,6 +19,7 @@ import type { SettlementTransfer } from "@/types";
 
 export function SettleTab() {
   const { debt, members } = useEvent();
+  const suggestedTransfer = debt?.transfers[0];
 
   const aliasOf = (memberId: string) =>
     members.find((m) => m.id === memberId)?.user?.alias_cvu ?? null;
@@ -79,6 +75,9 @@ export function SettleTab() {
               Cómo saldar
             </h2>
             <AddPaymentDialog
+              defaultFrom={suggestedTransfer?.fromMemberId}
+              defaultTo={suggestedTransfer?.toMemberId}
+              defaultAmount={suggestedTransfer?.amount}
               trigger={
                 <Button variant="ghost" size="sm">
                   <Plus className="size-4" />
@@ -127,28 +126,6 @@ function TransferRow({
   fromAvatar: string | null;
   toAvatar: string | null;
 }) {
-  const router = useRouter();
-  const { eventId, refetch } = useEvent();
-  const [isPending, startTransition] = useTransition();
-
-  const registerPayment = () => {
-    startTransition(async () => {
-      const res = await addPayment({
-        eventId,
-        fromMember: transfer.fromMemberId,
-        toMember: transfer.toMemberId,
-        amount: transfer.amount,
-      });
-      if (res.error) {
-        toast.error(res.error);
-        return;
-      }
-      toast.success("Pago anotado");
-      await refetch();
-      router.refresh();
-    });
-  };
-
   return (
     <li>
       <Card>
@@ -175,20 +152,17 @@ function TransferRow({
             </p>
           )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={registerPayment}
-            disabled={isPending}
-          >
-            {isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <CheckCircle2 className="size-4" />
-            )}
-            Anotar pago
-          </Button>
+          <AddPaymentDialog
+            defaultFrom={transfer.fromMemberId}
+            defaultTo={transfer.toMemberId}
+            defaultAmount={transfer.amount}
+            trigger={
+              <Button variant="outline" size="sm" className="w-full">
+                <CheckCircle2 className="size-4" />
+                Registrar pago
+              </Button>
+            }
+          />
         </CardContent>
       </Card>
     </li>

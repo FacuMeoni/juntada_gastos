@@ -16,6 +16,12 @@ export const formatDateTime = (iso: string): string =>
     timeStyle: "short",
   }).format(new Date(iso));
 
+/** Solo hora (ej: 18:30). */
+export const formatTime = (iso: string): string =>
+  new Intl.DateTimeFormat("es-AR", {
+    timeStyle: "short",
+  }).format(new Date(iso));
+
 /** Iniciales para fallback de avatar (ej: "Juan Pérez" -> "JP"). */
 export const getInitials = (name: string): string =>
   name

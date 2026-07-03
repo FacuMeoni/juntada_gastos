@@ -9,6 +9,7 @@ import {
   deleteEvent,
 } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
+import { LeaveEventSection } from "@/components/event/leave-event-section";
 import { RemoveManagedMemberDialog } from "@/components/event/remove-managed-member-dialog";
 import { EventStateGuard } from "@/components/event/event-state";
 import { UserAvatar } from "@/components/user-avatar";
@@ -48,6 +49,7 @@ export function SettingsTab() {
         </section>
 
         {isOwner && <DangerZone eventId={eventId} />}
+        <LeaveEventSection />
       </div>
     </EventStateGuard>
   );

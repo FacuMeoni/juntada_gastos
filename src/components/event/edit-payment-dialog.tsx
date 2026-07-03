@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { addPayment } from "@/app/actions";
+import { updatePayment } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
 import { memberDisplayName } from "@/lib/debt";
 import { Button } from "@/components/ui/button";
@@ -16,40 +16,35 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import type { Payment } from "@/types";
 
-export function AddPaymentDialog({
-  trigger,
-  defaultFrom,
-  defaultTo,
-  defaultAmount,
+export function EditPaymentDialog({
+  payment,
+  open,
+  onOpenChange,
 }: {
-  trigger: React.ReactElement;
-  defaultFrom?: string;
-  defaultTo?: string;
-  defaultAmount?: number;
+  payment: Payment;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
-  const { eventId, members, currentMemberId, refetch } = useEvent();
+  const { eventId, members, refetch } = useEvent();
 
-  const [open, setOpen] = useState(false);
-  const [fromMember, setFromMember] = useState("");
-  const [toMember, setToMember] = useState("");
-  const [amount, setAmount] = useState("");
+  const [fromMember, setFromMember] = useState(payment.from_member);
+  const [toMember, setToMember] = useState(payment.to_member);
+  const [amount, setAmount] = useState(String(payment.amount));
   const [isPending, startTransition] = useTransition();
 
-  const reset = () => {
-    setFromMember(defaultFrom ?? currentMemberId ?? members[0]?.id ?? "");
-    setToMember(defaultTo ?? members[1]?.id ?? members[0]?.id ?? "");
-    setAmount(
-      defaultAmount != null && defaultAmount > 0 ? String(defaultAmount) : "",
-    );
+  const resetForm = () => {
+    setFromMember(payment.from_member);
+    setToMember(payment.to_member);
+    setAmount(String(payment.amount));
   };
 
-  const onOpenChange = (next: boolean) => {
-    if (next) reset();
-    setOpen(next);
+  const handleOpenChange = (next: boolean) => {
+    if (next) resetForm();
+    onOpenChange(next);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,8 +60,9 @@ export function AddPaymentDialog({
     }
 
     startTransition(async () => {
-      const res = await addPayment({
+      const res = await updatePayment({
         eventId,
+        paymentId: payment.id,
         fromMember,
         toMember,
         amount: value,
@@ -75,29 +71,28 @@ export function AddPaymentDialog({
         toast.error(res.error);
         return;
       }
-      toast.success("Pago registrado");
-      setOpen(false);
+      toast.success("Pago actualizado");
+      handleOpenChange(false);
       await refetch();
       router.refresh();
     });
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger render={trigger} />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-sm">
         <form onSubmit={handleSubmit} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>Registrar pago</DialogTitle>
+            <DialogTitle>Editar pago</DialogTitle>
             <DialogDescription>
-              Cuando alguien paga (total o parcial), se descuenta de su deuda.
+              Corregí quién pagó, a quién y el monto registrado.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-1.5">
-            <Label htmlFor="pay-from">Paga</Label>
+            <Label htmlFor="edit-pay-from">Paga</Label>
             <select
-              id="pay-from"
+              id="edit-pay-from"
               value={fromMember}
               onChange={(e) => setFromMember(e.target.value)}
               className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
@@ -115,9 +110,9 @@ export function AddPaymentDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="pay-to">Recibe</Label>
+            <Label htmlFor="edit-pay-to">Recibe</Label>
             <select
-              id="pay-to"
+              id="edit-pay-to"
               value={toMember}
               onChange={(e) => setToMember(e.target.value)}
               className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
@@ -131,14 +126,13 @@ export function AddPaymentDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="pay-amount">Monto</Label>
+            <Label htmlFor="edit-pay-amount">Monto</Label>
             <Input
-              id="pay-amount"
+              id="edit-pay-amount"
               type="number"
               inputMode="decimal"
               min="0"
               step="0.01"
-              placeholder="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               autoFocus
@@ -148,7 +142,7 @@ export function AddPaymentDialog({
 
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending && <Loader2 className="size-4 animate-spin" />}
-            Registrar pago
+            Guardar cambios
           </Button>
         </form>
       </DialogContent>

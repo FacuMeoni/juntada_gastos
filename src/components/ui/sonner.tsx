@@ -20,26 +20,38 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       icons={{
         success: (
-          <CircleCheckIcon className="size-4" />
+          <CircleCheckIcon className="size-4 text-[var(--toast-success-icon)]" />
         ),
         info: (
-          <InfoIcon className="size-4" />
+          <InfoIcon className="size-4 text-[var(--toast-success-icon)]" />
         ),
         warning: (
-          <TriangleAlertIcon className="size-4" />
+          <TriangleAlertIcon className="size-4 text-[var(--toast-fg)]" />
         ),
         error: (
-          <OctagonXIcon className="size-4" />
+          <OctagonXIcon className="size-4 text-[var(--toast-error-icon)]" />
         ),
         loading: (
-          <Loader2Icon className="size-4 animate-spin" />
+          <Loader2Icon className="size-4 animate-spin text-[var(--toast-fg)]" />
         ),
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
+          "--normal-bg": "var(--toast-bg)",
+          "--normal-text": "var(--toast-fg)",
+          "--normal-border": "var(--toast-border)",
+          "--success-bg": "var(--toast-bg)",
+          "--success-text": "var(--toast-fg)",
+          "--success-border": "var(--toast-border)",
+          "--info-bg": "var(--toast-bg)",
+          "--info-text": "var(--toast-fg)",
+          "--info-border": "var(--toast-border)",
+          "--error-bg": "var(--toast-bg)",
+          "--error-text": "var(--toast-fg)",
+          "--error-border": "var(--toast-border)",
+          "--warning-bg": "var(--toast-bg)",
+          "--warning-text": "var(--toast-fg)",
+          "--warning-border": "var(--toast-border)",
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }

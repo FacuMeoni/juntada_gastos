@@ -6,6 +6,7 @@ import { Camera, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { signOut, updateProfile } from "@/app/actions";
+import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { customAvatarUrl } from "@/lib/avatar";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,8 @@ export function ProfileForm({
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-5">
+    <div className="space-y-5">
+      <form onSubmit={handleSave} className="space-y-5">
       <div className="flex flex-col items-center gap-3">
         <button
           type="button"
@@ -151,10 +153,16 @@ export function ProfileForm({
         </CardContent>
       </Card>
 
-      <Button type="submit" className="w-full" disabled={isPending || uploading}>
-        {isPending && <Loader2 className="size-4 animate-spin" />}
-        Guardar cambios
-      </Button>
+        <Button type="submit" className="w-full" disabled={isPending || uploading}>
+          {isPending && <Loader2 className="size-4 animate-spin" />}
+          Guardar cambios
+        </Button>
+      </form>
+
+      <section className="space-y-2">
+        <Label>Contraseña</Label>
+        <ChangePasswordForm />
+      </section>
 
       <Button
         type="button"
@@ -165,6 +173,6 @@ export function ProfileForm({
         <LogOut className="size-4" />
         Cerrar sesión
       </Button>
-    </form>
+    </div>
   );
 }

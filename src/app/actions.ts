@@ -20,21 +20,30 @@ async function requireUser() {
   return { supabase, user };
 }
 
-/** Solo quien cargó el gasto puede modificarlo o borrarlo. */
-async function assertExpenseCreator(
+/** Dueño, creador, pagador o participante explícito del gasto. */
+async function assertCanManageExpense(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   expenseId: string,
 ): Promise<ActionResult | null> {
   const { data: expense } = await supabase
     .from("expenses")
-    .select("created_by, event_id")
+    .select(
+      "created_by, event_id, paid_by, events!inner(created_by), expense_splits(member_id)",
+    )
     .eq("id", expenseId)
     .single();
 
-  if (!expense?.created_by) {
-    return { error: "Este gasto no se puede editar (registro anterior)." };
-  }
+  if (!expense) return { error: "Gasto no encontrado." };
+
+  const eventOwnerId = (
+    expense.events as { created_by: string } | { created_by: string }[]
+  );
+  const ownerId = Array.isArray(eventOwnerId)
+    ? eventOwnerId[0]?.created_by
+    : eventOwnerId.created_by;
+
+  if (ownerId === userId) return null;
 
   const { data: member } = await supabase
     .from("event_members")
@@ -43,8 +52,62 @@ async function assertExpenseCreator(
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (member?.id !== expense.created_by) {
-    return { error: "Solo quien cargó el gasto puede modificarlo." };
+  if (!member) return { error: "No tenés permiso para modificar este gasto." };
+
+  const splits = (expense.expense_splits ?? []) as { member_id: string }[];
+  const allowed =
+    expense.created_by === member.id ||
+    expense.paid_by === member.id ||
+    splits.some((s) => s.member_id === member.id);
+
+  if (!allowed) {
+    return { error: "No tenés permiso para modificar este gasto." };
+  }
+
+  return null;
+}
+
+/** Dueño, quien lo registró o participante del pago (from/to). */
+async function assertCanManagePayment(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  paymentId: string,
+): Promise<ActionResult | null> {
+  const { data: payment } = await supabase
+    .from("payments")
+    .select(
+      "created_by, event_id, from_member, to_member, events!inner(created_by)",
+    )
+    .eq("id", paymentId)
+    .single();
+
+  if (!payment) return { error: "Pago no encontrado." };
+
+  const eventOwnerId = (
+    payment.events as { created_by: string } | { created_by: string }[]
+  );
+  const ownerId = Array.isArray(eventOwnerId)
+    ? eventOwnerId[0]?.created_by
+    : eventOwnerId.created_by;
+
+  if (ownerId === userId) return null;
+
+  const { data: member } = await supabase
+    .from("event_members")
+    .select("id")
+    .eq("event_id", payment.event_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!member) return { error: "No tenés permiso para modificar este pago." };
+
+  const allowed =
+    payment.created_by === member.id ||
+    payment.from_member === member.id ||
+    payment.to_member === member.id;
+
+  if (!allowed) {
+    return { error: "No tenés permiso para modificar este pago." };
   }
 
   return null;
@@ -98,7 +161,8 @@ export async function getFrequentContacts(): Promise<
   const { data: myMemberships, error: membershipsError } = await supabase
     .from("event_members")
     .select("event_id")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("status", "active");
 
   if (membershipsError) return { error: membershipsError.message };
 
@@ -107,7 +171,7 @@ export async function getFrequentContacts(): Promise<
 
   const { data: coMembers, error: coMembersError } = await supabase
     .from("event_members")
-    .select("user_id, event_id, user:users(id, name, avatar_url)")
+    .select("user_id, event_id, user:users!user_id(id, name, avatar_url)")
     .in("event_id", eventIds)
     .not("user_id", "is", null)
     .neq("user_id", user.id);
@@ -173,7 +237,7 @@ export async function createEvent(input: {
 
   const { error: memberError } = await supabase
     .from("event_members")
-    .insert({ event_id: event.id, user_id: user.id });
+    .insert({ event_id: event.id, user_id: user.id, status: "active" });
 
   if (memberError) return { error: memberError.message };
 
@@ -186,6 +250,8 @@ export async function createEvent(input: {
       extraUserIds.map((userId) => ({
         event_id: event.id,
         user_id: userId,
+        status: "pending",
+        invited_by: user.id,
       })),
     );
 
@@ -329,6 +395,111 @@ export async function joinEvent(eventId: string): Promise<ActionResult> {
   return {};
 }
 
+export async function acceptEventInvitation(
+  eventId: string,
+): Promise<ActionResult> {
+  const { supabase, user } = await requireUser();
+
+  const { data: membership } = await supabase
+    .from("event_members")
+    .select("id")
+    .eq("event_id", eventId)
+    .eq("user_id", user.id)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (!membership) return { error: "No tenés una invitación pendiente." };
+
+  const { error } = await supabase
+    .from("event_members")
+    .update({ status: "active" })
+    .eq("id", membership.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath(`/${eventId}`);
+  return {};
+}
+
+export async function declineEventInvitation(
+  eventId: string,
+): Promise<ActionResult> {
+  const { supabase, user } = await requireUser();
+
+  const { error } = await supabase
+    .from("event_members")
+    .delete()
+    .eq("event_id", eventId)
+    .eq("user_id", user.id)
+    .eq("status", "pending");
+
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  return {};
+}
+
+export async function leaveEvent(eventId: string): Promise<ActionResult> {
+  const { supabase, user } = await requireUser();
+
+  const { data: event } = await supabase
+    .from("events")
+    .select("created_by")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (!event) return { error: "Juntada no encontrada." };
+  if (event.created_by === user.id) {
+    return { error: "El organizador no puede abandonar la juntada. Eliminala desde ajustes." };
+  }
+
+  const { data: member } = await supabase
+    .from("event_members")
+    .select("id")
+    .eq("event_id", eventId)
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!member) return { error: "No sos miembro activo de esta juntada." };
+
+  const memberId = member.id;
+
+  const [{ count: paidCount }, { count: splitCount }, { count: paymentCount }] =
+    await Promise.all([
+      supabase
+        .from("expenses")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", eventId)
+        .eq("paid_by", memberId),
+      supabase
+        .from("expense_splits")
+        .select("id", { count: "exact", head: true })
+        .eq("member_id", memberId),
+      supabase
+        .from("payments")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", eventId)
+        .or(`from_member.eq.${memberId},to_member.eq.${memberId}`),
+    ]);
+
+  if ((paidCount ?? 0) > 0 || (splitCount ?? 0) > 0 || (paymentCount ?? 0) > 0) {
+    return {
+      error:
+        "No podés salir mientras tengas gastos o pagos registrados. Pedile al organizador que resuelva tus movimientos.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("event_members")
+    .delete()
+    .eq("id", memberId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/");
+  revalidatePath(`/${eventId}`);
+  return {};
+}
+
 // -----------------------------------------------------------------------------
 // Gastos y pagos
 // -----------------------------------------------------------------------------
@@ -405,7 +576,11 @@ export async function updateExpense(input: {
   if (!(input.amount > 0)) return { error: "El monto debe ser mayor a 0." };
   if (!input.paidBy) return { error: "Indicá quién pagó." };
 
-  const denied = await assertExpenseCreator(supabase, user.id, input.expenseId);
+  const denied = await assertCanManageExpense(
+    supabase,
+    user.id,
+    input.expenseId,
+  );
   if (denied) return denied;
 
   const { error } = await supabase
@@ -453,7 +628,7 @@ export async function deleteExpense(
 ): Promise<ActionResult> {
   const { supabase, user } = await requireUser();
 
-  const denied = await assertExpenseCreator(supabase, user.id, expenseId);
+  const denied = await assertCanManageExpense(supabase, user.id, expenseId);
   if (denied) return denied;
 
   const { error } = await supabase.from("expenses").delete().eq("id", expenseId);
@@ -468,18 +643,60 @@ export async function addPayment(input: {
   toMember: string;
   amount: number;
 }): Promise<ActionResult> {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
 
   if (!(input.amount > 0)) return { error: "El monto debe ser mayor a 0." };
   if (input.fromMember === input.toMember)
     return { error: "El pagador y el receptor deben ser distintos." };
+
+  const { data: myMember } = await supabase
+    .from("event_members")
+    .select("id")
+    .eq("event_id", input.eventId)
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   const { error } = await supabase.from("payments").insert({
     event_id: input.eventId,
     from_member: input.fromMember,
     to_member: input.toMember,
     amount: input.amount,
+    created_by: myMember?.id ?? null,
   });
+
+  if (error) return { error: error.message };
+  revalidatePath(`/${input.eventId}`);
+  return {};
+}
+
+export async function updatePayment(input: {
+  eventId: string;
+  paymentId: string;
+  fromMember: string;
+  toMember: string;
+  amount: number;
+}): Promise<ActionResult> {
+  const { supabase, user } = await requireUser();
+
+  if (!(input.amount > 0)) return { error: "El monto debe ser mayor a 0." };
+  if (input.fromMember === input.toMember)
+    return { error: "El pagador y el receptor deben ser distintos." };
+
+  const denied = await assertCanManagePayment(
+    supabase,
+    user.id,
+    input.paymentId,
+  );
+  if (denied) return denied;
+
+  const { error } = await supabase
+    .from("payments")
+    .update({
+      from_member: input.fromMember,
+      to_member: input.toMember,
+      amount: input.amount,
+    })
+    .eq("id", input.paymentId);
 
   if (error) return { error: error.message };
   revalidatePath(`/${input.eventId}`);
@@ -490,7 +707,11 @@ export async function deletePayment(
   eventId: string,
   paymentId: string,
 ): Promise<ActionResult> {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
+
+  const denied = await assertCanManagePayment(supabase, user.id, paymentId);
+  if (denied) return denied;
+
   const { error } = await supabase.from("payments").delete().eq("id", paymentId);
   if (error) return { error: error.message };
   revalidatePath(`/${eventId}`);

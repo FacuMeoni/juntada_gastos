@@ -5,11 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { AppContainer } from "@/components/layout/app-container";
 import { UserAvatar } from "@/components/user-avatar";
 import { CreateEventDialog } from "@/components/home/create-event-dialog";
+import { PendingInvitations } from "@/components/home/pending-invitations";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SummaryCard } from "@/components/summary-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
-import type { Event } from "@/types";
+import type { Event, EventInvitation } from "@/types";
 
 interface EventCard extends Event {
   membersCount: number;
@@ -31,14 +32,55 @@ async function getHomeData() {
 
   const { data: memberships } = await supabase
     .from("event_members")
-    .select("event:events(id, name, created_by, created_at)")
+    .select("id, status, created_at, invited_by, event:events(id, name, created_by, created_at)")
     .eq("user_id", user.id);
 
+  const allMemberships = memberships ?? [];
+  const activeMemberships = allMemberships.filter(
+    (m) => m.status === "active" || !m.status,
+  );
+  const pendingMemberships = allMemberships.filter((m) => m.status === "pending");
+
   const events =
-    (memberships
-      ?.map((m) => m.event)
+    (activeMemberships
+      .map((m) => m.event)
       .filter(Boolean)
       .flat() as Event[]) ?? [];
+
+  const inviterIds = [
+    ...new Set(
+      pendingMemberships.map((m) => m.invited_by).filter(Boolean) as string[],
+    ),
+  ];
+  const inviterNames = new Map<string, string>();
+  if (inviterIds.length > 0) {
+    const { data: inviters } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", inviterIds);
+    for (const u of inviters ?? []) inviterNames.set(u.id, u.name);
+  }
+
+  const invitations: EventInvitation[] = pendingMemberships
+    .map((m) => {
+      const rawEvent = m.event;
+      const ev = (Array.isArray(rawEvent) ? rawEvent[0] : rawEvent) as
+        | Event
+        | null;
+      if (!ev) return null;
+      return {
+        membershipId: m.id,
+        eventId: ev.id,
+        eventName: ev.name,
+        invitedByName: m.invited_by
+          ? (inviterNames.get(m.invited_by) ?? null)
+          : null,
+        createdAt: m.created_at,
+      };
+    })
+    .filter(Boolean) as EventInvitation[];
+
+  invitations.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   const eventIds = events.map((e) => e.id);
 
@@ -80,6 +122,7 @@ async function getHomeData() {
       avatar_url: null,
     },
     cards,
+    invitations,
     totalSpent,
   };
 }
@@ -88,7 +131,7 @@ export default async function HomePage() {
   const data = await getHomeData();
   if (!data) redirect("/login");
 
-  const { profile, cards, totalSpent } = data;
+  const { profile, cards, invitations, totalSpent } = data;
 
   return (
     <AppContainer className="gap-5 p-4">
@@ -120,6 +163,8 @@ export default async function HomePage() {
           value: formatCurrency(totalSpent),
         }}
       />
+
+      <PendingInvitations invitations={invitations} />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

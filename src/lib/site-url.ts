@@ -9,3 +9,7 @@ export function getSiteOrigin(): string {
 export function inviteUrl(eventId: string): string {
   return `${getSiteOrigin()}/invite/${eventId}`;
 }
+
+export function authCallbackUrl(next: string): string {
+  return `${getSiteOrigin()}/auth/callback?next=${encodeURIComponent(next)}`;
+}

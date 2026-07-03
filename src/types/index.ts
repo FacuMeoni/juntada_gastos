@@ -34,9 +34,20 @@ export interface Member {
   event_id: string;
   user_id: string | null;
   guest_name: string | null;
+  /** `active` = participa; `pending` = invitación sin aceptar. */
+  status: "active" | "pending";
+  invited_by: string | null;
   created_at: string;
   /** Perfil embebido cuando se hace join con `users` (opcional). */
   user?: Pick<User, "id" | "name" | "avatar_url" | "alias_cvu"> | null;
+}
+
+export interface EventInvitation {
+  membershipId: string;
+  eventId: string;
+  eventName: string;
+  invitedByName: string | null;
+  createdAt: string;
 }
 
 /** Usuario real con quien compartiste juntadas (para invitar al crear). */
@@ -79,6 +90,8 @@ export interface Payment {
   from_member: string;
   /** event_members.id que recibe. */
   to_member: string;
+  /** event_members.id de quien registró el pago en la app. */
+  created_by: string | null;
   amount: number;
   created_at: string;
 }

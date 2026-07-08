@@ -28,7 +28,7 @@ export function UserAvatar({
 
   return (
     <Avatar size={size} className={cn(className)}>
-      {showImage ? (
+      {showImage && src ? (
         <AvatarImage
           src={src}
           alt={name}

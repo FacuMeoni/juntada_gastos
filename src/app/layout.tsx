@@ -50,7 +50,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="bg-muted/30 min-h-full" suppressHydrationWarning>
+      <body className="bg-background min-h-full" suppressHydrationWarning>
         <Script
           id="theme-init"
           strategy="beforeInteractive"

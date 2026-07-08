@@ -1,11 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-const cardClassName =
-  "border-0 bg-white text-neutral-900 ring-1 ring-neutral-200 dark:bg-neutral-900 dark:text-white dark:ring-foreground/10";
-
-const mutedClassName = "text-xs text-neutral-500 dark:text-neutral-400";
-
 interface SummaryCardProps {
   icon: React.ReactNode;
   primary: { label: string; value: string };
@@ -18,7 +13,7 @@ interface SummaryCardProps {
   className?: string;
 }
 
-/** Card de resumen: blanca en modo claro, oscura en modo oscuro. */
+/** Card de resumen según diseño OpenPencil (monocromático). */
 export function SummaryCard({
   icon,
   primary,
@@ -26,30 +21,36 @@ export function SummaryCard({
   className,
 }: SummaryCardProps) {
   return (
-    <Card className={cn(cardClassName, className)}>
+    <Card className={className}>
       <CardContent
         className={cn(
-          "flex items-center gap-4",
+          "flex items-center gap-3 p-4",
           secondary && "justify-between gap-4",
         )}
       >
-        <div className="flex min-w-0 items-center gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="icon-surface flex size-11 shrink-0 items-center justify-center rounded-xl">
             {icon}
           </div>
           <div className="min-w-0">
-            <p className={mutedClassName}>{primary.label}</p>
-            <p className="text-2xl font-bold">{primary.value}</p>
+            <p className="text-muted-foreground text-xs leading-none">
+              {primary.label}
+            </p>
+            <p className="mt-1 text-2xl leading-none font-bold tracking-tight tabular-nums">
+              {primary.value}
+            </p>
           </div>
         </div>
 
         {secondary && (
           <div className="shrink-0 text-right">
-            <p className={mutedClassName}>{secondary.label}</p>
+            <p className="text-muted-foreground text-xs leading-none">
+              {secondary.label}
+            </p>
             <p
               className={cn(
-                "text-lg font-semibold",
-                secondary.muted && "text-neutral-500 dark:text-neutral-400",
+                "mt-1 text-lg leading-none font-semibold tabular-nums",
+                secondary.muted && "text-muted-foreground font-medium",
               )}
             >
               {secondary.value}

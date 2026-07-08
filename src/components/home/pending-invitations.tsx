@@ -23,7 +23,7 @@ export function PendingInvitations({
     <section className="space-y-3">
       <div className="flex items-center gap-2">
         <Bell className="text-foreground size-4" />
-        <h2 className="font-semibold">Invitaciones</h2>
+        <h2 className="text-base font-bold">Invitaciones</h2>
       </div>
       <ul className="space-y-2.5">
         {invitations.map((inv) => (

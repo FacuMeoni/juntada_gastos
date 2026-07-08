@@ -159,7 +159,7 @@ function TransferRow({
             trigger={
               <Button variant="outline" size="sm" className="w-full">
                 <CheckCircle2 className="size-4" />
-                Registrar pago
+                Marcar como pagado
               </Button>
             }
           />

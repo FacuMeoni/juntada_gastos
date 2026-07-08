@@ -10,7 +10,6 @@ export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Evita el mismatch de hidratación: hasta montar, no sabemos el tema real.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
@@ -40,7 +39,6 @@ export function ThemeToggle({ className }: { className?: string }) {
           <Moon className="size-5" />
         )
       ) : (
-        // Placeholder neutro durante SSR para mantener el layout estable.
         <Sun className="size-5 opacity-0" />
       )}
     </Button>

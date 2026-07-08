@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -20,12 +20,14 @@ export function ProfileForm({
   initialAlias,
   initialAvatarUrl,
   email,
+  onDirtyChange,
 }: {
   userId: string;
   initialName: string;
   initialAlias: string;
   initialAvatarUrl: string | null;
   email: string;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,6 +39,23 @@ export function ProfileForm({
   );
   const [uploading, setUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [savedSnapshot, setSavedSnapshot] = useState({
+    name: initialName.trim(),
+    alias: initialAlias.trim(),
+    avatarUrl: customAvatarUrl(initialAvatarUrl),
+  });
+
+  const isDirty = useMemo(
+    () =>
+      name.trim() !== savedSnapshot.name ||
+      alias.trim() !== savedSnapshot.alias ||
+      customAvatarUrl(avatarUrl) !== savedSnapshot.avatarUrl,
+    [name, alias, avatarUrl, savedSnapshot],
+  );
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const handleAvatarChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -76,6 +95,11 @@ export function ProfileForm({
         toast.error(res.error);
         return;
       }
+      setSavedSnapshot({
+        name: name.trim(),
+        alias: alias.trim(),
+        avatarUrl: customAvatarUrl(avatarUrl),
+      });
       toast.success("Perfil actualizado");
       router.refresh();
     });

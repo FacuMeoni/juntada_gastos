@@ -17,7 +17,7 @@ import { memberDisplayName } from "@/lib/debt";
 import type { Member } from "@/types";
 
 export function EventMembersDialog() {
-  const { members } = useEvent();
+  const { members, createdByUserId } = useEvent();
   const [open, setOpen] = useState(false);
 
   return (
@@ -42,7 +42,11 @@ export function EventMembersDialog() {
           </DialogHeader>
           <ul className="max-h-[min(60vh,24rem)] space-y-2 overflow-y-auto overscroll-y-contain">
             {members.map((member) => (
-              <MemberListItem key={member.id} member={member} />
+              <MemberListItem
+                key={member.id}
+                member={member}
+                createdByUserId={createdByUserId}
+              />
             ))}
           </ul>
         </DialogContent>
@@ -51,9 +55,16 @@ export function EventMembersDialog() {
   );
 }
 
-function MemberListItem({ member }: { member: Member }) {
+function MemberListItem({
+  member,
+  createdByUserId,
+}: {
+  member: Member;
+  createdByUserId: string;
+}) {
   const [copied, setCopied] = useState(false);
   const isGuest = member.user_id === null;
+  const isCreator = member.user_id === createdByUserId;
   const name = memberDisplayName(member);
   const alias = member.user?.alias_cvu?.trim() || null;
 
@@ -93,9 +104,16 @@ function MemberListItem({ member }: { member: Member }) {
           </button>
         ) : null}
       </div>
-      <Badge variant={isGuest ? "secondary" : "outline"} className="shrink-0">
-        {isGuest ? "Gestionado" : "Con cuenta"}
-      </Badge>
+      {isCreator && (
+        <Badge variant="default" className="shrink-0">
+          Creador
+        </Badge>
+      )}
+      {isGuest && (
+        <Badge variant="secondary" className="shrink-0">
+          Gestionado
+        </Badge>
+      )}
     </li>
   );
 }

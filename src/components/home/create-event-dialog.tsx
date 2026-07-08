@@ -2,23 +2,23 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Loader2, Plus, Search, Share2 } from "lucide-react";
+import { Check, Copy, Plus, Search, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { createEvent, getFrequentContacts } from "@/app/actions";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetDescription,
+  BottomSheetField,
+  BottomSheetInput,
+  BottomSheetPrimaryButton,
+  BottomSheetSearchInput,
+  BottomSheetTitle,
+  BottomSheetTrigger,
+} from "@/components/ui/bottom-sheet";
 import { inviteUrl } from "@/lib/site-url";
 import type { FrequentContact } from "@/types";
 import { cn } from "@/lib/utils";
@@ -178,9 +178,11 @@ export function CreateEventDialog({
     router.push(`/${createdEventId}`);
   };
 
+  const selectedCount = selected.size;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger
+    <BottomSheet open={open} onOpenChange={onOpenChange}>
+      <BottomSheetTrigger
         render={
           variant === "inline" ? (
             <Button>
@@ -188,129 +190,129 @@ export function CreateEventDialog({
               Nueva juntada
             </Button>
           ) : (
-            <Button size="icon" aria-label="Nueva juntada">
-              <Plus className="size-5" />
+            <Button
+              size="icon"
+              className="size-9 shrink-0 rounded-lg"
+              aria-label="Nueva juntada"
+            >
+              <Plus className="size-[18px]" />
             </Button>
           )
         }
       />
-      <DialogContent className="sm:max-w-sm">
+      <BottomSheetContent className="bg-card">
         {!createdEventId ? (
-          <>
-            <DialogHeader>
-              <DialogTitle>Nueva juntada</DialogTitle>
-              <DialogDescription>
+          <div className="flex flex-col gap-[18px]">
+            <div className="space-y-1.5">
+              <BottomSheetTitle>Nueva juntada</BottomSheetTitle>
+              <BottomSheetDescription>
                 Poné un nombre y sumá gente con la que ya dividiste gastos.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="event-name">Nombre</Label>
-                <Input
-                  id="event-name"
-                  placeholder="Ej: Viaje a Bariloche"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoFocus
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Sumá participantes</Label>
-
-                {loadingContacts ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-12 w-full rounded-lg" />
-                    <Skeleton className="h-12 w-full rounded-lg" />
-                    <Skeleton className="h-12 w-full rounded-lg" />
-                  </div>
-                ) : contacts.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    Todavía no tenés juntadas con otras personas. Creá la
-                    juntada y compartí el link para invitar.
-                  </p>
-                ) : (
-                  <>
-                    {contacts.length >= 3 && (
-                      <div className="relative">
-                        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                        <Input
-                          type="search"
-                          placeholder="Buscar por nombre…"
-                          value={contactSearch}
-                          onChange={(e) => setContactSearch(e.target.value)}
-                          className="pl-9"
-                          aria-label="Buscar participantes"
-                        />
-                      </div>
-                    )}
-
-                    {visibleContacts.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">
-                        No encontramos a nadie con ese nombre.
-                      </p>
-                    ) : (
-                      <ul className="max-h-[min(40vh,14rem)] space-y-2 overflow-y-auto overscroll-y-contain">
-                        {visibleContacts.map((contact) => (
-                          <ContactRow
-                            key={contact.userId}
-                            contact={contact}
-                            active={selected.has(contact.userId)}
-                            onToggle={() => toggleContact(contact.userId)}
-                          />
-                        ))}
-                      </ul>
-                    )}
-
-                    {hasMoreContacts && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground h-auto w-full py-1 text-xs"
-                        onClick={() => setShowAllMembers((v) => !v)}
-                      >
-                        {showAllMembers
-                          ? "Ver menos"
-                          : `Ver todos los miembros (${contacts.length})`}
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
+              </BottomSheetDescription>
             </div>
 
-            <DialogFooter>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={isPending || loadingContacts}
-                onClick={handleCreate}
-              >
-                {isPending && <Loader2 className="size-4 animate-spin" />}
-                Crear juntada
-                {selected.size > 0 ? ` (${selected.size})` : ""}
-              </Button>
-            </DialogFooter>
-          </>
+            <BottomSheetField label="Nombre">
+              <BottomSheetInput
+                id="event-name"
+                placeholder="Ej: Viaje a Bariloche"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+                required
+              />
+            </BottomSheetField>
+
+            <div className="space-y-3">
+              <p className="text-foreground text-[13px] font-medium">
+                Sumá participantes
+              </p>
+
+              {loadingContacts ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                </div>
+              ) : contacts.length === 0 ? (
+                <p className="text-muted-foreground text-[13px] leading-snug">
+                  Todavía no tenés juntadas con otras personas. Creá la juntada
+                  y compartí el link para invitar.
+                </p>
+              ) : (
+                <>
+                  {contacts.length >= 3 && (
+                    <div className="relative">
+                      <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                      <BottomSheetSearchInput
+                        type="search"
+                        placeholder="Buscar por nombre…"
+                        value={contactSearch}
+                        onChange={(e) => setContactSearch(e.target.value)}
+                        className="pl-9"
+                        aria-label="Buscar participantes"
+                      />
+                    </div>
+                  )}
+
+                  {visibleContacts.length === 0 ? (
+                    <p className="text-muted-foreground text-[13px]">
+                      No encontramos a nadie con ese nombre.
+                    </p>
+                  ) : (
+                    <ul className="max-h-[min(40vh,14rem)] space-y-1 overflow-y-auto overscroll-y-contain">
+                      {visibleContacts.map((contact) => (
+                        <ContactRow
+                          key={contact.userId}
+                          contact={contact}
+                          active={selected.has(contact.userId)}
+                          onToggle={() => toggleContact(contact.userId)}
+                        />
+                      ))}
+                    </ul>
+                  )}
+
+                  {hasMoreContacts && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground h-auto w-full py-1 text-xs"
+                      onClick={() => setShowAllMembers((v) => !v)}
+                    >
+                      {showAllMembers
+                        ? "Ver menos"
+                        : `Ver todos los miembros (${contacts.length})`}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+
+            <BottomSheetPrimaryButton
+              type="button"
+              loading={isPending}
+              disabled={loadingContacts}
+              onClick={handleCreate}
+            >
+              Crear juntada
+              {selectedCount > 0 ? ` (${selectedCount})` : ""}
+            </BottomSheetPrimaryButton>
+          </div>
         ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle>¡Listo!</DialogTitle>
-              <DialogDescription>
-                {selected.size > 0
-                  ? `Enviaste invitación a ${selected.size} ${selected.size === 1 ? "persona" : "personas"}. Van a verla en su inicio y pueden aceptar o rechazar. Compartí el link con quien falte.`
+          <div className="flex flex-col gap-[18px]">
+            <div className="space-y-1.5">
+              <BottomSheetTitle>¡Listo!</BottomSheetTitle>
+              <BottomSheetDescription>
+                {selectedCount > 0
+                  ? `Enviaste invitación a ${selectedCount} ${selectedCount === 1 ? "persona" : "personas"}. Van a verla en su inicio y pueden aceptar o rechazar. Compartí el link con quien falte.`
                   : "Compartí el link para invitar a quien quieras."}
-              </DialogDescription>
-            </DialogHeader>
+              </BottomSheetDescription>
+            </div>
 
             <div className="flex flex-col gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="h-12 w-full rounded-xl"
                 onClick={copyInvite}
               >
                 {copied ? (
@@ -322,7 +324,7 @@ export function CreateEventDialog({
               </Button>
               <Button
                 type="button"
-                className="w-full"
+                className="h-12 w-full rounded-xl"
                 onClick={shareInvite}
               >
                 <Share2 className="size-4" />
@@ -330,15 +332,13 @@ export function CreateEventDialog({
               </Button>
             </div>
 
-            <DialogFooter>
-              <Button type="button" className="w-full" onClick={enterEvent}>
-                Continuar
-              </Button>
-            </DialogFooter>
-          </>
+            <BottomSheetPrimaryButton type="button" onClick={enterEvent}>
+              Continuar
+            </BottomSheetPrimaryButton>
+          </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </BottomSheetContent>
+    </BottomSheet>
   );
 }
 
@@ -357,8 +357,8 @@ function ContactRow({
         type="button"
         onClick={onToggle}
         className={cn(
-          "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition",
-          active ? "border-foreground bg-muted" : "hover:bg-muted/50",
+          "flex w-full items-center gap-3 rounded-xl px-1 py-2.5 text-left transition",
+          active && "bg-muted/60",
         )}
       >
         <UserAvatar

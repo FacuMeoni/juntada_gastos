@@ -2,22 +2,25 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { addExpense } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
 import { memberDisplayName, splitEvenlyUnits } from "@/lib/debt";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+  BottomSheet,
+  BottomSheetAmountInput,
+  BottomSheetContent,
+  BottomSheetField,
+  BottomSheetForm,
+  BottomSheetInput,
+  BottomSheetPill,
+  BottomSheetPrimaryButton,
+  BottomSheetSectionLabel,
+  BottomSheetTitle,
+  BottomSheetTrigger,
+} from "@/components/ui/bottom-sheet";
 
 export function AddExpenseDialog() {
   const router = useRouter();
@@ -64,7 +67,6 @@ export function AddExpenseDialog() {
       return;
     }
 
-    // Si participan todos, dejamos que se divida en partes iguales (sin splits).
     const splits =
       selected.length === members.length
         ? undefined
@@ -93,95 +95,80 @@ export function AddExpenseDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger
+    <BottomSheet open={open} onOpenChange={onOpenChange}>
+      <BottomSheetTrigger
         render={
-          <Button className="w-full">
+          <Button className="h-12 w-full gap-2 rounded-xl text-sm font-medium">
             <Plus className="size-4" />
             Agregar gasto
           </Button>
         }
       />
-      <DialogContent className="max-h-[90dvh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle>Nuevo gasto</DialogTitle>
-          </DialogHeader>
+      <BottomSheetContent className="bg-card">
+        <BottomSheetForm onSubmit={handleSubmit}>
+          <BottomSheetTitle>Nuevo gasto</BottomSheetTitle>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="desc">Descripción</Label>
-            <Input
+          <BottomSheetAmountInput
+            id="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="$ 0"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            required
+            autoFocus
+          />
+
+          <BottomSheetField label="Descripción">
+            <BottomSheetInput
               id="desc"
               placeholder="Ej: Super, nafta, entradas..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              autoFocus
               required
             />
-          </div>
+          </BottomSheetField>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="amount">Monto</Label>
-            <Input
-              id="amount"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              placeholder="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="paidby">¿Quién pagó?</Label>
-            <select
-              id="paidby"
-              value={paidBy}
-              onChange={(e) => setPaidBy(e.target.value)}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
-            >
+          <div className="space-y-2.5">
+            <BottomSheetSectionLabel>¿Quién pagó?</BottomSheetSectionLabel>
+            <div className="flex flex-wrap gap-2">
               {members.map((m) => (
-                <option key={m.id} value={m.id}>
+                <BottomSheetPill
+                  key={m.id}
+                  active={paidBy === m.id}
+                  onClick={() => setPaidBy(m.id)}
+                >
                   {memberDisplayName(m)}
-                </option>
+                </BottomSheetPill>
               ))}
-            </select>
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Dividir entre</Label>
+          <div className="space-y-2.5">
+            <BottomSheetSectionLabel>Dividir entre</BottomSheetSectionLabel>
             <div className="flex flex-wrap gap-2">
               {members.map((m) => {
                 const active = participants.has(m.id);
                 return (
-                  <button
+                  <BottomSheetPill
                     key={m.id}
-                    type="button"
+                    active={active}
                     onClick={() => toggleParticipant(m.id)}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition",
-                      active
-                        ? "border-foreground bg-muted text-foreground"
-                        : "border-input text-muted-foreground",
-                    )}
                   >
                     {active && <Check className="size-3.5" />}
                     {memberDisplayName(m)}
-                  </button>
+                  </BottomSheetPill>
                 );
               })}
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending && <Loader2 className="size-4 animate-spin" />}
+          <BottomSheetPrimaryButton type="submit" loading={isPending}>
             Guardar gasto
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </BottomSheetPrimaryButton>
+        </BottomSheetForm>
+      </BottomSheetContent>
+    </BottomSheet>
   );
 }

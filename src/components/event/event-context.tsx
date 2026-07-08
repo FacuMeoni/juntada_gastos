@@ -8,6 +8,7 @@ interface EventContextValue {
   eventId: string;
   eventName: string;
   isOwner: boolean;
+  createdByUserId: string;
   currentUserId: string;
   /** event_members.id del usuario logueado dentro de este evento (si existe). */
   currentMemberId: string | null;
@@ -32,12 +33,14 @@ export function EventProvider({
   eventId,
   eventName,
   isOwner,
+  createdByUserId,
   currentUserId,
   children,
 }: {
   eventId: string;
   eventName: string;
   isOwner: boolean;
+  createdByUserId: string;
   currentUserId: string;
   children: React.ReactNode;
 }) {
@@ -54,6 +57,7 @@ export function EventProvider({
       eventId,
       eventName,
       isOwner,
+      createdByUserId,
       currentUserId,
       currentMemberId,
       members,
@@ -68,6 +72,7 @@ export function EventProvider({
       eventId,
       eventName,
       isOwner,
+      createdByUserId,
       currentUserId,
       currentMemberId,
       members,

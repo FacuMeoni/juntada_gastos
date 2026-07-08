@@ -44,7 +44,7 @@ export function ExpensesTab() {
     <EventStateGuard>
       <div className="flex flex-col gap-4 pb-2">
         <SummaryCard
-          icon={<Wallet className="size-6" />}
+          icon={<Wallet className="size-[22px]" />}
           primary={{
             label: "Total gastado",
             value: formatCurrency(debt?.totalSpent ?? 0),
@@ -89,7 +89,8 @@ function ExpenseRow({ expense }: { expense: Expense }) {
     <>
       <li>
         <Card
-          className="cursor-pointer transition-colors hover:bg-muted/30"
+          size="sm"
+          className="cursor-pointer py-0 transition-colors hover:bg-muted/40"
           onClick={() => setDetailOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -100,15 +101,17 @@ function ExpenseRow({ expense }: { expense: Expense }) {
           role="button"
           tabIndex={0}
         >
-          <CardContent className="flex items-center gap-3">
-            <div className="icon-surface text-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
-              <Receipt className="size-5" />
+          <CardContent className="flex items-center gap-2.5 px-3 py-2.5">
+            <div className="icon-surface flex size-9 shrink-0 items-center justify-center rounded-xl">
+              <Receipt className="size-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{expense.description}</p>
-              <p className="text-muted-foreground text-xs">Pagó {payerName}</p>
+              <p className="truncate text-sm font-medium">{expense.description}</p>
+              <p className="text-muted-foreground text-[11px] leading-tight">
+                Pagó {payerName}
+              </p>
             </div>
-            <p className="shrink-0 font-semibold tabular-nums">
+            <p className="shrink-0 text-sm font-bold tabular-nums">
               {formatCurrency(expense.amount)}
             </p>
           </CardContent>

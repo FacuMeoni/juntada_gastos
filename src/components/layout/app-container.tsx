@@ -7,20 +7,14 @@ import { cn } from "@/lib/utils";
 export function AppContainer({
   children,
   className,
-  withBottomNav = false,
 }: {
   children: React.ReactNode;
   className?: string;
-  /** Agrega padding inferior para no tapar contenido con el bottom nav fijo. */
-  withBottomNav?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "bg-background relative mx-auto flex w-full max-w-md flex-col shadow-sm",
-        withBottomNav
-          ? "h-dvh max-h-dvh flex flex-col pb-20"
-          : "min-h-dvh",
+        "bg-background relative mx-auto flex min-h-dvh w-full max-w-md flex-col",
         className,
       )}
     >

@@ -3,10 +3,11 @@ import { redirect } from "next/navigation";
 import { ChevronRight, PartyPopper, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppContainer } from "@/components/layout/app-container";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { PwaInstallDialog } from "@/components/home/pwa-install-dialog";
 import { UserAvatar } from "@/components/user-avatar";
 import { CreateEventDialog } from "@/components/home/create-event-dialog";
 import { PendingInvitations } from "@/components/home/pending-invitations";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { SummaryCard } from "@/components/summary-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
@@ -115,6 +116,7 @@ async function getHomeData() {
   }
 
   return {
+    email: user.email ?? "",
     profile: profile ?? {
       id: user.id,
       name: user.email ?? "Vos",
@@ -134,30 +136,33 @@ export default async function HomePage() {
   const { profile, cards, invitations, totalSpent } = data;
 
   return (
-    <AppContainer className="gap-5 p-4">
-      <header className="flex items-center justify-between pt-2">
-        <div>
+    <AppContainer className="gap-4 p-4">
+      <header className="flex items-center gap-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
+        <Link
+          href="/perfil"
+          className="shrink-0"
+          aria-label="Ir a mi perfil"
+        >
+          <UserAvatar
+            name={profile.name}
+            avatarUrl={profile.avatar_url}
+            size="lg"
+          />
+        </Link>
+        <div className="min-w-0 flex-1">
           <p className="text-muted-foreground text-sm">Hola,</p>
-          <h1 className="text-xl font-bold tracking-tight">{profile.name}</h1>
+          <h1 className="truncate text-xl font-bold tracking-tight">
+            {profile.name}
+          </h1>
         </div>
-        <div className="flex items-center gap-1">
-          <ThemeToggle />
-          <Link
-            href="/perfil"
-            aria-label="Ir a mi perfil"
-            className="rounded-full ring-offset-2 transition focus-visible:ring-2"
-          >
-            <UserAvatar
-              name={profile.name}
-              avatarUrl={profile.avatar_url}
-              size="lg"
-            />
-          </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <PwaInstallDialog />
+          <ThemeToggle className="bg-card size-10 shrink-0 rounded-xl border border-border shadow-none" />
         </div>
       </header>
 
       <SummaryCard
-        icon={<Wallet className="size-6" />}
+        icon={<Wallet className="size-[22px]" />}
         primary={{
           label: "Gastado en todas tus juntadas",
           value: formatCurrency(totalSpent),
@@ -168,31 +173,33 @@ export default async function HomePage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Tus juntadas</h2>
+          <h2 className="text-base font-bold">Tus juntadas</h2>
           {cards.length > 0 && <CreateEventDialog />}
         </div>
 
         {cards.length === 0 ? (
           <EmptyState />
         ) : (
-          <ul className="space-y-2.5">
+          <ul className="space-y-3">
             {cards.map((ev) => (
               <li key={ev.id}>
-                <Link href={`/${ev.id}`}>
-                  <Card className="transition active:scale-[0.99]">
-                    <CardContent className="flex items-center gap-3">
-                      <div className="icon-surface text-foreground flex size-10 items-center justify-center rounded-xl">
-                        <PartyPopper className="size-5" />
-                      </div>
+                <Link href={`/${ev.id}`} className="block">
+                  <Card className="transition-colors hover:bg-muted/40 active:scale-[0.99]">
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <ChevronRight className="text-muted-foreground size-5 shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{ev.name}</p>
-                        <p className="text-muted-foreground text-xs">
+                        <p className="truncate text-[15px] font-medium">
+                          {ev.name}
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-xs leading-none">
                           {ev.membersCount}{" "}
                           {ev.membersCount === 1 ? "persona" : "personas"} ·{" "}
                           {formatCurrency(ev.total)}
                         </p>
                       </div>
-                      <ChevronRight className="text-muted-foreground size-5 shrink-0" />
+                      <div className="icon-surface flex size-10 shrink-0 items-center justify-center rounded-xl">
+                        <PartyPopper className="size-5" />
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
@@ -207,9 +214,9 @@ export default async function HomePage() {
 
 function EmptyState() {
   return (
-    <Card className="border-dashed">
+    <Card className="border-dashed bg-transparent shadow-none">
       <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-        <div className="bg-muted flex size-14 items-center justify-center rounded-2xl">
+        <div className="icon-surface flex size-14 items-center justify-center rounded-2xl">
           <PartyPopper className="text-muted-foreground size-7" />
         </div>
         <div className="space-y-1">

@@ -45,6 +45,7 @@ export default async function EventLayout({
       eventId={event.id}
       eventName={event.name}
       isOwner={isOwner}
+      createdByUserId={event.created_by}
       currentUserId={user.id}
     >
       {children}

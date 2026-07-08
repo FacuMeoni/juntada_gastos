@@ -173,6 +173,7 @@ export async function getFrequentContacts(): Promise<
     .from("event_members")
     .select("user_id, event_id, user:users!user_id(id, name, avatar_url)")
     .in("event_id", eventIds)
+    .eq("status", "active")
     .not("user_id", "is", null)
     .neq("user_id", user.id);
 
@@ -191,7 +192,6 @@ export async function getFrequentContacts(): Promise<
       name: string;
       avatar_url: string | null;
     } | null;
-    if (!profile) continue;
 
     const existing = byUser.get(row.user_id);
     if (existing) {
@@ -200,8 +200,8 @@ export async function getFrequentContacts(): Promise<
     }
 
     byUser.set(row.user_id, {
-      name: profile.name,
-      avatarUrl: profile.avatar_url,
+      name: profile?.name?.trim() || "Usuario",
+      avatarUrl: profile?.avatar_url ?? null,
       eventIds: new Set([row.event_id]),
     });
   }
@@ -261,6 +261,64 @@ export async function createEvent(input: {
   revalidatePath("/");
   revalidatePath(`/${event.id}`);
   return { data: event.id };
+}
+
+export async function inviteMembersToEvent(input: {
+  eventId: string;
+  memberUserIds: string[];
+}): Promise<ActionResult<{ invited: number }>> {
+  const { supabase, user } = await requireUser();
+
+  const { data: membership } = await supabase
+    .from("event_members")
+    .select("id")
+    .eq("event_id", input.eventId)
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (!membership) {
+    return { error: "Tenés que ser miembro activo para invitar amigos." };
+  }
+
+  const uniqueIds = [
+    ...new Set(input.memberUserIds.filter((id) => id !== user.id)),
+  ];
+
+  if (uniqueIds.length === 0) {
+    return { error: "Elegí al menos un amigo para invitar." };
+  }
+
+  const { data: existing } = await supabase
+    .from("event_members")
+    .select("user_id")
+    .eq("event_id", input.eventId)
+    .in("user_id", uniqueIds);
+
+  const alreadyIn = new Set(
+    (existing ?? []).map((row) => row.user_id).filter(Boolean) as string[],
+  );
+  const toInvite = uniqueIds.filter((id) => !alreadyIn.has(id));
+
+  if (toInvite.length === 0) {
+    return { error: "Esas personas ya están en la juntada o tienen invitación." };
+  }
+
+  const { error } = await supabase.from("event_members").insert(
+    toInvite.map((userId) => ({
+      event_id: input.eventId,
+      user_id: userId,
+      status: "pending" as const,
+      invited_by: user.id,
+    })),
+  );
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/");
+  revalidatePath(`/${input.eventId}`);
+  revalidatePath(`/${input.eventId}/ajustes`);
+  return { data: { invited: toInvite.length } };
 }
 
 export async function deleteEvent(eventId: string): Promise<ActionResult> {

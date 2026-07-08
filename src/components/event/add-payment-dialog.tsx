@@ -2,22 +2,23 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { addPayment } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
 import { memberDisplayName } from "@/lib/debt";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  BottomSheet,
+  BottomSheetAmountInput,
+  BottomSheetContent,
+  BottomSheetDescription,
+  BottomSheetField,
+  BottomSheetForm,
+  BottomSheetPrimaryButton,
+  BottomSheetTitle,
+  BottomSheetTrigger,
+} from "@/components/ui/bottom-sheet";
 
 export function AddPaymentDialog({
   trigger,
@@ -37,7 +38,14 @@ export function AddPaymentDialog({
   const [fromMember, setFromMember] = useState("");
   const [toMember, setToMember] = useState("");
   const [amount, setAmount] = useState("");
+  const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const hasPreset =
+    defaultFrom != null &&
+    defaultTo != null &&
+    defaultAmount != null &&
+    defaultAmount > 0;
 
   const reset = () => {
     setFromMember(defaultFrom ?? currentMemberId ?? members[0]?.id ?? "");
@@ -45,11 +53,39 @@ export function AddPaymentDialog({
     setAmount(
       defaultAmount != null && defaultAmount > 0 ? String(defaultAmount) : "",
     );
+    setCopied(false);
   };
 
   const onOpenChange = (next: boolean) => {
     if (next) reset();
     setOpen(next);
+  };
+
+  const fromName = members.find((m) => m.id === fromMember);
+  const toName = members.find((m) => m.id === toMember);
+  const recipientAlias = toName?.user?.alias_cvu ?? null;
+
+  const headline = (() => {
+    if (!fromName || !toName) return "Marcar pago";
+    if (currentMemberId === toMember) {
+      return `${memberDisplayName(fromName)} te paga`;
+    }
+    if (currentMemberId === fromMember) {
+      return `Pagás a ${memberDisplayName(toName)}`;
+    }
+    return `${memberDisplayName(fromName)} paga a ${memberDisplayName(toName)}`;
+  })();
+
+  const copyAlias = async () => {
+    if (!recipientAlias) return;
+    try {
+      await navigator.clipboard.writeText(recipientAlias);
+      setCopied(true);
+      toast.success("Alias copiado");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("No se pudo copiar el alias");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -83,75 +119,116 @@ export function AddPaymentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger render={trigger} />
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-sm">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <DialogHeader>
-            <DialogTitle>Registrar pago</DialogTitle>
-            <DialogDescription>
-              Cuando alguien paga (total o parcial), se descuenta de su deuda.
-            </DialogDescription>
-          </DialogHeader>
+    <BottomSheet open={open} onOpenChange={onOpenChange}>
+      <BottomSheetTrigger render={trigger} />
+      <BottomSheetContent className="bg-card">
+        {hasPreset ? (
+          <BottomSheetForm onSubmit={handleSubmit}>
+            <div className="space-y-3">
+              <h2 className="text-lg font-bold tracking-tight">{headline}</h2>
+              <BottomSheetAmountInput
+                id="pay-amount-preset"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="$ 0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="pay-from">Paga</Label>
-            <select
-              id="pay-from"
-              value={fromMember}
-              onChange={(e) => setFromMember(e.target.value)}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
-            >
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {memberDisplayName(m)}
-                </option>
-              ))}
-            </select>
-          </div>
+            {recipientAlias ? (
+              <div className="space-y-2">
+                <p className="text-muted-foreground text-[13px]">
+                  Transferí a
+                </p>
+                <div className="border-border flex items-center gap-2 rounded-xl border px-3.5 py-3">
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {recipientAlias}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 shrink-0 rounded-lg px-3 text-xs"
+                    onClick={copyAlias}
+                  >
+                    <Copy className="size-3.5" />
+                    {copied ? "Copiado" : "Copiar"}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
 
-          <div className="text-muted-foreground flex justify-center">
-            <ArrowRight className="size-4" />
-          </div>
+            <BottomSheetPrimaryButton type="submit" loading={isPending}>
+              Marcar como pagado
+            </BottomSheetPrimaryButton>
+          </BottomSheetForm>
+        ) : (
+          <BottomSheetForm onSubmit={handleSubmit}>
+            <div className="space-y-1.5">
+              <BottomSheetTitle>Marcar pago</BottomSheetTitle>
+              <BottomSheetDescription>
+                Cuando alguien paga (total o parcial), se descuenta de su
+                deuda.
+              </BottomSheetDescription>
+            </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="pay-to">Recibe</Label>
-            <select
-              id="pay-to"
-              value={toMember}
-              onChange={(e) => setToMember(e.target.value)}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
-            >
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {memberDisplayName(m)}
-                </option>
-              ))}
-            </select>
-          </div>
+            <BottomSheetField label="Paga">
+              <select
+                id="pay-from"
+                value={fromMember}
+                onChange={(e) => setFromMember(e.target.value)}
+                className="border-border bg-card w-full rounded-xl border px-3.5 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {memberDisplayName(m)}
+                  </option>
+                ))}
+              </select>
+            </BottomSheetField>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="pay-amount">Monto</Label>
-            <Input
-              id="pay-amount"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              placeholder="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              autoFocus
-              required
-            />
-          </div>
+            <div className="text-muted-foreground flex justify-center">
+              <ArrowRight className="size-4" />
+            </div>
 
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending && <Loader2 className="size-4 animate-spin" />}
-            Registrar pago
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <BottomSheetField label="Recibe">
+              <select
+                id="pay-to"
+                value={toMember}
+                onChange={(e) => setToMember(e.target.value)}
+                className="border-border bg-card w-full rounded-xl border px-3.5 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {memberDisplayName(m)}
+                  </option>
+                ))}
+              </select>
+            </BottomSheetField>
+
+            <BottomSheetField label="Monto">
+              <BottomSheetAmountInput
+                id="pay-amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="$ 0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                autoFocus
+              />
+            </BottomSheetField>
+
+            <BottomSheetPrimaryButton type="submit" loading={isPending}>
+              Marcar como pagado
+            </BottomSheetPrimaryButton>
+          </BottomSheetForm>
+        )}
+      </BottomSheetContent>
+    </BottomSheet>
   );
 }

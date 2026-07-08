@@ -34,7 +34,7 @@ export function LoginForm() {
   }, [authError]);
 
   const goNext = () => {
-    router.push(next);
+    router.replace(next);
     router.refresh();
   };
 
@@ -46,8 +46,8 @@ export function LoginForm() {
       email,
       password,
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       toast.error(
         error.message === "Invalid login credentials"
           ? "Email o contraseña incorrectos."
@@ -55,7 +55,6 @@ export function LoginForm() {
       );
       return;
     }
-    toast.success("¡Bienvenido!");
     goNext();
   };
 
@@ -70,12 +69,11 @@ export function LoginForm() {
         data: { name: name.trim() || email.split("@")[0] },
       },
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       toast.error(error.message);
       return;
     }
-    toast.success("¡Cuenta creada!");
     goNext();
   };
 

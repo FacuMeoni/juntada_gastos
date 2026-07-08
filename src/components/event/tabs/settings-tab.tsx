@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, Loader2, Trash2, UserPlus } from "lucide-react";
+import { Loader2, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import {
   addManagedMember,
@@ -10,6 +10,7 @@ import {
 } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
 import { LeaveEventSection } from "@/components/event/leave-event-section";
+import { InviteFriendsSection } from "@/components/event/invite-friends-section";
 import { RemoveManagedMemberDialog } from "@/components/event/remove-managed-member-dialog";
 import { EventStateGuard } from "@/components/event/event-state";
 import { UserAvatar } from "@/components/user-avatar";
@@ -28,7 +29,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { memberDisplayName } from "@/lib/debt";
-import { inviteUrl } from "@/lib/site-url";
 
 export function SettingsTab() {
   const { eventId, members, isOwner } = useEvent();
@@ -36,7 +36,7 @@ export function SettingsTab() {
   return (
     <EventStateGuard>
       <div className="space-y-6">
-        <InviteSection eventId={eventId} />
+        <InviteFriendsSection />
         {isOwner && <AddMemberSection eventId={eventId} />}
 
         <section className="space-y-2">
@@ -52,42 +52,6 @@ export function SettingsTab() {
         <LeaveEventSection />
       </div>
     </EventStateGuard>
-  );
-}
-
-function InviteSection({ eventId }: { eventId: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(inviteUrl(eventId));
-      setCopied(true);
-      toast.success("Link copiado");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("No se pudo copiar el link");
-    }
-  };
-
-  return (
-    <section className="space-y-2">
-      <Label>Invitar amigos</Label>
-      <Card>
-        <CardContent className="space-y-3">
-          <p className="text-muted-foreground text-sm">
-            Compartí este link para que se sumen con su cuenta.
-          </p>
-          <Button onClick={copy} className="w-full" variant="outline">
-            {copied ? (
-              <Check className="size-4" />
-            ) : (
-              <Copy className="size-4" />
-            )}
-            {copied ? "¡Copiado!" : "Copiar link de invitación"}
-          </Button>
-        </CardContent>
-      </Card>
-    </section>
   );
 }
 
@@ -138,13 +102,14 @@ function AddMemberSection({ eventId }: { eventId: string }) {
 }
 
 function MemberRow({ memberId }: { memberId: string }) {
-  const { members, isOwner } = useEvent();
+  const { members, isOwner, createdByUserId } = useEvent();
   const [removeOpen, setRemoveOpen] = useState(false);
 
   const member = members.find((m) => m.id === memberId);
   if (!member) return null;
 
   const isGuest = member.user_id === null;
+  const isCreator = member.user_id === createdByUserId;
   const canRemove = isOwner && isGuest;
 
   return (
@@ -159,9 +124,8 @@ function MemberRow({ memberId }: { memberId: string }) {
           <span className="flex-1 truncate text-sm font-medium">
             {memberDisplayName(member)}
           </span>
-          <Badge variant={isGuest ? "secondary" : "outline"}>
-            {isGuest ? "Gestionado" : "Con cuenta"}
-          </Badge>
+          {isCreator && <Badge variant="default">Creador</Badge>}
+          {isGuest && <Badge variant="secondary">Gestionado</Badge>}
           {canRemove && (
             <Button
               variant="ghost"

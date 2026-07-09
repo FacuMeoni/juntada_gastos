@@ -60,7 +60,7 @@ export function BottomSheetDescription({
   );
 }
 
-/** Campo con etiqueta debajo, como en el diseño OpenPencil. */
+/** Campo con etiqueta arriba del input. */
 export function BottomSheetField({
   label,
   className,
@@ -72,8 +72,8 @@ export function BottomSheetField({
 }) {
   return (
     <div className={cn("space-y-2", className)}>
-      {children}
       <p className="text-muted-foreground text-[13px]">{label}</p>
+      {children}
     </div>
   );
 }

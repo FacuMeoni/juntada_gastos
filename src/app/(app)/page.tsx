@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, PartyPopper, Wallet } from "lucide-react";
+import { Settings, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AppContainer } from "@/components/layout/app-container";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PwaInstallDialog } from "@/components/home/pwa-install-dialog";
 import { UserAvatar } from "@/components/user-avatar";
-import { CreateEventDialog } from "@/components/home/create-event-dialog";
+import { HomeEventsSection } from "@/components/home/home-events-section";
 import { PendingInvitations } from "@/components/home/pending-invitations";
 import { SummaryCard } from "@/components/summary-card";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
 import type { Event, EventInvitation } from "@/types";
 
@@ -140,14 +139,20 @@ export default async function HomePage() {
       <header className="flex items-center gap-3 pt-[max(0.5rem,env(safe-area-inset-top,0px))]">
         <Link
           href="/perfil"
-          className="shrink-0"
-          aria-label="Ir a mi perfil"
+          className="relative inline-flex shrink-0"
+          aria-label="Ir a mi perfil y ajustes"
         >
           <UserAvatar
             name={profile.name}
             avatarUrl={profile.avatar_url}
             size="lg"
           />
+          <span
+            className="bg-primary text-primary-foreground pointer-events-none absolute -right-0.5 -bottom-0.5 z-10 flex size-[18px] items-center justify-center rounded-full ring-2 ring-background"
+            aria-hidden
+          >
+            <Settings className="size-2.5" strokeWidth={2.5} />
+          </span>
         </Link>
         <div className="min-w-0 flex-1">
           <p className="text-muted-foreground text-sm">Hola,</p>
@@ -171,62 +176,7 @@ export default async function HomePage() {
 
       <PendingInvitations invitations={invitations} />
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold">Tus juntadas</h2>
-          {cards.length > 0 && <CreateEventDialog />}
-        </div>
-
-        {cards.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <ul className="space-y-3">
-            {cards.map((ev) => (
-              <li key={ev.id}>
-                <Link href={`/${ev.id}`} className="block">
-                  <Card className="transition-colors hover:bg-muted/40 active:scale-[0.99]">
-                    <CardContent className="flex items-center gap-3 p-4">
-                      <ChevronRight className="text-muted-foreground size-5 shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[15px] font-medium">
-                          {ev.name}
-                        </p>
-                        <p className="text-muted-foreground mt-1 text-xs leading-none">
-                          {ev.membersCount}{" "}
-                          {ev.membersCount === 1 ? "persona" : "personas"} ·{" "}
-                          {formatCurrency(ev.total)}
-                        </p>
-                      </div>
-                      <div className="icon-surface flex size-10 shrink-0 items-center justify-center rounded-xl">
-                        <PartyPopper className="size-5" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <HomeEventsSection cards={cards} />
     </AppContainer>
-  );
-}
-
-function EmptyState() {
-  return (
-    <Card className="border-dashed bg-transparent shadow-none">
-      <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-        <div className="icon-surface flex size-14 items-center justify-center rounded-2xl">
-          <PartyPopper className="text-muted-foreground size-7" />
-        </div>
-        <div className="space-y-1">
-          <p className="font-medium">Todavía no tenés juntadas</p>
-          <p className="text-muted-foreground text-sm text-balance">
-            Creá tu primera juntada para empezar a dividir gastos.
-          </p>
-        </div>
-        <CreateEventDialog variant="inline" />
-      </CardContent>
-    </Card>
   );
 }

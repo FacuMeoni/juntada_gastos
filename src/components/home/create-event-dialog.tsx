@@ -30,12 +30,17 @@ function inviteMessage(eventName: string, eventId: string) {
 }
 
 export function CreateEventDialog({
-  variant = "default",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  showTrigger = true,
 }: {
-  variant?: "default" | "inline";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
   const [name, setName] = useState("");
   const [contacts, setContacts] = useState<FrequentContact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
@@ -70,6 +75,11 @@ export function CreateEventDialog({
       }
       setLoadingContacts(false);
     });
+  };
+
+  const setOpen = (next: boolean) => {
+    if (controlledOnOpenChange) controlledOnOpenChange(next);
+    else setInternalOpen(next);
   };
 
   const onOpenChange = (next: boolean) => {
@@ -123,7 +133,6 @@ export function CreateEventDialog({
       if (!res.data) return;
       setCreatedEventId(res.data);
       toast.success("¡Juntada creada!");
-      router.refresh();
     });
   };
 
@@ -174,32 +183,28 @@ export function CreateEventDialog({
 
   const enterEvent = () => {
     if (!createdEventId) return;
+    const eventId = createdEventId;
     setOpen(false);
-    router.push(`/${createdEventId}`);
+    router.push(`/${eventId}`);
   };
 
   const selectedCount = selected.size;
 
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
-      <BottomSheetTrigger
-        render={
-          variant === "inline" ? (
-            <Button>
-              <Plus className="size-4" />
-              Nueva juntada
-            </Button>
-          ) : (
+      {showTrigger ? (
+        <BottomSheetTrigger
+          render={
             <Button
               size="icon"
               className="size-9 shrink-0 rounded-lg"
               aria-label="Nueva juntada"
-            >
-              <Plus className="size-[18px]" />
-            </Button>
-          )
-        }
-      />
+            />
+          }
+        >
+          <Plus className="size-[18px]" />
+        </BottomSheetTrigger>
+      ) : null}
       <BottomSheetContent className="bg-card">
         {!createdEventId ? (
           <div className="flex flex-col gap-[18px]">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updateExpense } from "@/app/actions";
@@ -28,7 +27,6 @@ export function EditExpenseDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const router = useRouter();
   const { eventId, members, refetch } = useEvent();
 
   const [description, setDescription] = useState(expense.description);
@@ -100,7 +98,6 @@ export function EditExpenseDialog({
       toast.success("Gasto actualizado");
       handleOpenChange(false);
       await refetch();
-      router.refresh();
     });
   };
 

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 import { useDebtCalculation } from "@/hooks/use-debt-calculation";
+import type { EventData } from "@/lib/event-data";
 import type { DebtCalculation, Expense, Member, Payment } from "@/types";
 
 interface EventContextValue {
@@ -35,6 +36,7 @@ export function EventProvider({
   isOwner,
   createdByUserId,
   currentUserId,
+  initialData,
   children,
 }: {
   eventId: string;
@@ -42,10 +44,12 @@ export function EventProvider({
   isOwner: boolean;
   createdByUserId: string;
   currentUserId: string;
+  /** Datos precargados en el servidor para evitar el fetch inicial. */
+  initialData?: EventData;
   children: React.ReactNode;
 }) {
   const { data, members, expenses, payments, loading, error, refetch } =
-    useDebtCalculation(eventId);
+    useDebtCalculation(eventId, initialData);
 
   const currentMemberId = useMemo(
     () => members.find((m) => m.user_id === currentUserId)?.id ?? null,

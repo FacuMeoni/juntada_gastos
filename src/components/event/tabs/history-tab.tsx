@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeftRight, Pencil, Receipt, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteExpense, deletePayment } from "@/app/actions";
@@ -76,7 +75,6 @@ export function HistoryTab() {
 }
 
 function HistoryRow({ item }: { item: TimelineItem }) {
-  const router = useRouter();
   const { eventId, expenses, payments, currentMemberId, isOwner, refetch } =
     useEvent();
   const [editOpen, setEditOpen] = useState(false);
@@ -105,7 +103,6 @@ function HistoryRow({ item }: { item: TimelineItem }) {
       }
       toast.success("Eliminado");
       await refetch();
-      router.refresh();
     });
   };
 

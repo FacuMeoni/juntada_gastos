@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteExpense } from "@/app/actions";
@@ -30,7 +29,6 @@ export function ExpenseDetailDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const router = useRouter();
   const { eventId, members, currentMemberId, isOwner, refetch } = useEvent();
   const [editOpen, setEditOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -54,7 +52,6 @@ export function ExpenseDetailDialog({
       toast.success("Gasto eliminado");
       onOpenChange(false);
       await refetch();
-      router.refresh();
     });
   };
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EventShell } from "@/components/event/event-shell";
+import { fetchEventData } from "@/lib/event-data";
 
 export default async function EventLayout({
   children,
@@ -40,6 +41,13 @@ export default async function EventLayout({
       notFound();
     }
   }
+
+  // Precarga miembros/gastos/pagos en el servidor para evitar el fetch
+  // duplicado y el flash de skeleton al entrar a la juntada.
+  const initialData = await fetchEventData(supabase, eventId).catch(
+    () => undefined,
+  );
+
   return (
     <EventShell
       eventId={event.id}
@@ -47,6 +55,7 @@ export default async function EventLayout({
       isOwner={isOwner}
       createdByUserId={event.created_by}
       currentUserId={user.id}
+      initialData={initialData}
     >
       {children}
     </EventShell>

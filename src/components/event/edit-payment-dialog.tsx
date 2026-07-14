@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updatePayment } from "@/app/actions";
@@ -28,7 +27,6 @@ export function EditPaymentDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const router = useRouter();
   const { eventId, members, refetch } = useEvent();
 
   const [fromMember, setFromMember] = useState(payment.from_member);
@@ -74,7 +72,6 @@ export function EditPaymentDialog({
       toast.success("Pago actualizado");
       handleOpenChange(false);
       await refetch();
-      router.refresh();
     });
   };
 

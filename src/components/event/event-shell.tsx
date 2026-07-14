@@ -4,6 +4,7 @@ import { AppContainer } from "@/components/layout/app-container";
 import { EventProvider } from "@/components/event/event-context";
 import { EventHeader } from "@/components/event/event-header";
 import { EventTabs } from "@/components/event/event-tabs";
+import type { EventData } from "@/lib/event-data";
 
 export function EventShell({
   eventId,
@@ -11,6 +12,7 @@ export function EventShell({
   isOwner,
   createdByUserId,
   currentUserId,
+  initialData,
   children,
 }: {
   eventId: string;
@@ -18,6 +20,7 @@ export function EventShell({
   isOwner: boolean;
   createdByUserId: string;
   currentUserId: string;
+  initialData?: EventData;
   children: React.ReactNode;
 }) {
   return (
@@ -27,6 +30,7 @@ export function EventShell({
       isOwner={isOwner}
       createdByUserId={createdByUserId}
       currentUserId={currentUserId}
+      initialData={initialData}
     >
       <AppContainer className="min-h-0 h-dvh max-h-dvh">
         <div className="bg-card border-border shrink-0 border-b">

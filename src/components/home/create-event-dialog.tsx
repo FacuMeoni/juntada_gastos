@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Copy, Plus, Search, Share2 } from "lucide-react";
 import { toast } from "sonner";
-import { createEvent, getFrequentContacts } from "@/app/actions";
+import { createEvent } from "@/app/actions";
+import { getCachedFrequentContacts } from "@/lib/frequent-contacts-cache";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,7 +65,7 @@ export function CreateEventDialog({
 
   const loadContacts = () => {
     setLoadingContacts(true);
-    void getFrequentContacts().then((res) => {
+    void getCachedFrequentContacts().then((res) => {
       if (res.error) {
         toast.error(res.error);
         setContacts([]);

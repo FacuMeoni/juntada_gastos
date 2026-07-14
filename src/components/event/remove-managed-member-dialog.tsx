@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { removeManagedMember } from "@/app/actions";
@@ -32,7 +31,6 @@ export function RemoveManagedMemberDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const router = useRouter();
   const { eventId, members, expenses, payments, refetch } = useEvent();
   const [isPending, startTransition] = useTransition();
 
@@ -88,7 +86,6 @@ export function RemoveManagedMemberDialog({
       toast.success(`${name} fue eliminado`);
       onOpenChange(false);
       await refetch();
-      router.refresh();
     });
   };
 

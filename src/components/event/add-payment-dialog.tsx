@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { addPayment } from "@/app/actions";
@@ -31,7 +30,6 @@ export function AddPaymentDialog({
   defaultTo?: string;
   defaultAmount?: number;
 }) {
-  const router = useRouter();
   const { eventId, members, currentMemberId, refetch } = useEvent();
 
   const [open, setOpen] = useState(false);
@@ -114,7 +112,6 @@ export function AddPaymentDialog({
       toast.success("Pago registrado");
       setOpen(false);
       await refetch();
-      router.refresh();
     });
   };
 

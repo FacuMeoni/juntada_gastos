@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Check, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { addExpense } from "@/app/actions";
@@ -23,7 +22,6 @@ import {
 } from "@/components/ui/bottom-sheet";
 
 export function AddExpenseDialog() {
-  const router = useRouter();
   const { eventId, members, currentMemberId, refetch } = useEvent();
 
   const [open, setOpen] = useState(false);
@@ -90,7 +88,6 @@ export function AddExpenseDialog() {
       toast.success("Gasto agregado");
       setOpen(false);
       await refetch();
-      router.refresh();
     });
   };
 

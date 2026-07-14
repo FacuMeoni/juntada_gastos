@@ -39,6 +39,7 @@ export function ProfileForm({
   );
   const [uploading, setUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isSigningOut, startSignOut] = useTransition();
   const [savedSnapshot, setSavedSnapshot] = useState({
     name: initialName.trim(),
     alias: initialAlias.trim(),
@@ -192,9 +193,14 @@ export function ProfileForm({
         type="button"
         variant="ghost"
         className="text-foreground w-full"
-        onClick={() => startTransition(async () => void (await signOut()))}
+        disabled={isSigningOut}
+        onClick={() => startSignOut(async () => void (await signOut()))}
       >
-        <LogOut className="size-4" />
+        {isSigningOut ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          <LogOut className="size-4" />
+        )}
         Cerrar sesión
       </Button>
     </div>

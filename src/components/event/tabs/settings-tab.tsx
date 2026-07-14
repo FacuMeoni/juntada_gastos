@@ -56,7 +56,6 @@ export function SettingsTab() {
 }
 
 function AddMemberSection({ eventId }: { eventId: string }) {
-  const router = useRouter();
   const { refetch } = useEvent();
   const [name, setName] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -72,7 +71,6 @@ function AddMemberSection({ eventId }: { eventId: string }) {
       setName("");
       toast.success("Participante agregado");
       await refetch();
-      router.refresh();
     });
   };
 

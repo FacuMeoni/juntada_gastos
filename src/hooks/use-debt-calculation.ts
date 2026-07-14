@@ -1,14 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { calculateDebt } from "@/lib/debt";
-import type {
-  DebtCalculation,
-  Expense,
-  Member,
-  Payment,
-} from "@/types";
+import { fetchEventData, type EventData } from "@/lib/event-data";
+import type { DebtCalculation, Expense, Member, Payment } from "@/types";
 
 interface UseDebtCalculationResult {
   data: DebtCalculation | null;
@@ -27,15 +23,35 @@ interface UseDebtCalculationResult {
  *
  * Funciona igual para usuarios reales e invitados gestionados porque todo se
  * referencia por `event_members.id`.
+ *
+ * Si se recibe `initialData` (precargada en el servidor), se evita el
+ * fetch inicial y el skeleton de carga al entrar a la juntada.
  */
 export function useDebtCalculation(
   eventId: string | undefined,
+  initialData?: EventData,
 ): UseDebtCalculationResult {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [data, setData] = useState<DebtCalculation | null>(null);
-  const [loading, setLoading] = useState<boolean>(Boolean(eventId));
+  const [members, setMembers] = useState<Member[]>(
+    initialData?.members ?? [],
+  );
+  const [expenses, setExpenses] = useState<Expense[]>(
+    initialData?.expenses ?? [],
+  );
+  const [payments, setPayments] = useState<Payment[]>(
+    initialData?.payments ?? [],
+  );
+  const [data, setData] = useState<DebtCalculation | null>(
+    initialData
+      ? calculateDebt(
+          initialData.members,
+          initialData.expenses,
+          initialData.payments,
+        )
+      : null,
+  );
+  const [loading, setLoading] = useState<boolean>(
+    Boolean(eventId) && !initialData,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
@@ -49,39 +65,8 @@ export function useDebtCalculation(
 
     try {
       const supabase = createClient();
-
-      const [membersRes, expensesRes, paymentsRes] = await Promise.all([
-        supabase
-          .from("event_members")
-          .select(
-            "id, event_id, user_id, guest_name, status, invited_by, created_at, user:users!user_id(id, name, avatar_url, alias_cvu)",
-          )
-          .eq("event_id", eventId)
-          .eq("status", "active")
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("expenses")
-          .select(
-            "id, event_id, paid_by, created_by, description, amount, created_at, splits:expense_splits(id, expense_id, member_id, amount)",
-          )
-          .eq("event_id", eventId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("payments")
-          .select(
-            "id, event_id, from_member, to_member, amount, created_at, created_by",
-          )
-          .eq("event_id", eventId)
-          .order("created_at", { ascending: false }),
-      ]);
-
-      if (membersRes.error) throw membersRes.error;
-      if (expensesRes.error) throw expensesRes.error;
-      if (paymentsRes.error) throw paymentsRes.error;
-
-      const nextMembers = (membersRes.data ?? []) as unknown as Member[];
-      const nextExpenses = (expensesRes.data ?? []) as unknown as Expense[];
-      const nextPayments = (paymentsRes.data ?? []) as unknown as Payment[];
+      const { members: nextMembers, expenses: nextExpenses, payments: nextPayments } =
+        await fetchEventData(supabase, eventId);
 
       setMembers(nextMembers);
       setExpenses(nextExpenses);
@@ -96,10 +81,16 @@ export function useDebtCalculation(
     }
   }, [eventId]);
 
+  // Evita re-fetchear en el montaje inicial cuando ya llegaron datos
+  // precargados desde el servidor.
+  const skipInitialFetch = useRef(Boolean(initialData));
+
   useEffect(() => {
-    // Carga inicial y recarga al cambiar de evento. El setState síncrono de
-    // `loading` dentro de `fetchAll` es intencional para este patrón de fetch.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false;
+      return;
+    }
+    // Carga inicial y recarga al cambiar de evento.
     void fetchAll();
   }, [fetchAll]);
 

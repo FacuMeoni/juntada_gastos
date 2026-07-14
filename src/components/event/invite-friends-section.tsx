@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Check, Copy, Search, Share2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
-import { getFrequentContacts, inviteMembersToEvent } from "@/app/actions";
+import { inviteMembersToEvent } from "@/app/actions";
 import { useEvent } from "@/components/event/event-context";
+import {
+  getCachedFrequentContacts,
+  invalidateFrequentContactsCache,
+} from "@/lib/frequent-contacts-cache";
 import { UserAvatar } from "@/components/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,7 +25,6 @@ function inviteMessage(eventName: string, eventId: string) {
 }
 
 export function InviteFriendsSection() {
-  const router = useRouter();
   const { eventId, eventName, members, refetch } = useEvent();
   const [allContacts, setAllContacts] = useState<FrequentContact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(true);
@@ -55,7 +57,7 @@ export function InviteFriendsSection() {
   useEffect(() => {
     let cancelled = false;
 
-    void getFrequentContacts()
+    void getCachedFrequentContacts()
       .then((res) => {
         if (cancelled) return;
         if (res.error) {
@@ -156,8 +158,8 @@ export function InviteFriendsSection() {
           : `${res.data?.invited} invitaciones enviadas`,
       );
       setSelected(new Set());
+      invalidateFrequentContactsCache();
       await refetch();
-      router.refresh();
     });
   };
 

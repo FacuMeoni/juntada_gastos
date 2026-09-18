@@ -9,7 +9,7 @@ export default function LoginPage() {
     <LoginSystemTheme>
       <AppContainer className="justify-center gap-8 p-6">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-2xl shadow-lg">
+          <div className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-xl shadow-lg">
             <Users className="size-8" />
           </div>
           <div>

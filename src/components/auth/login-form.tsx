@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, AlertCircle, Lock, Mail } from "lucide-react";
+import { Loader2, AlertCircle, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { authCallbackUrl } from "@/lib/site-url";
@@ -96,7 +96,7 @@ export function LoginForm() {
   if (recoverySent && mode === "recovery") {
     return (
       <Card>
-        <CardContent className="space-y-4 pt-6 text-center">
+        <CardContent className="space-y-4 pt-4 text-center">
           <div className="bg-muted mx-auto flex size-12 items-center justify-center rounded-full">
             <Mail className="size-5" />
           </div>
@@ -110,7 +110,7 @@ export function LoginForm() {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="h-11 w-full"
             onClick={() => {
               setRecoverySent(false);
               setMode("signin");
@@ -125,7 +125,7 @@ export function LoginForm() {
 
   return (
     <Card>
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="space-y-6 pt-4 pb-2">
         {authError && mode !== "recovery" && (
           <div className="bg-muted text-foreground flex items-start gap-2 rounded-md p-3 text-sm">
             <AlertCircle className="mt-0.5 size-4 shrink-0" />
@@ -133,42 +133,45 @@ export function LoginForm() {
           </div>
         )}
 
-        <p className="text-sm font-medium">
-          {mode === "signin"
-            ? "Iniciar sesión"
-            : mode === "signup"
-              ? "Crear cuenta"
-              : "Recuperar contraseña"}
-        </p>
+        <div className="space-y-1.5">
+          <h2 className="text-lg font-semibold tracking-tight">
+            {mode === "signin"
+              ? "Iniciar sesión"
+              : mode === "signup"
+                ? "Crear cuenta"
+                : "Recuperar contraseña"}
+          </h2>
+          <p className="text-muted-foreground text-sm text-balance">
+            {mode === "signin"
+              ? "Ingresá tu correo abajo para entrar a tu cuenta."
+              : mode === "signup"
+                ? "Completá tus datos para crear tu cuenta."
+                : "Ingresá tu correo y te mandamos un link para restablecer la contraseña."}
+          </p>
+        </div>
 
         {mode === "recovery" ? (
-          <form onSubmit={handleRecovery} className="space-y-3">
-            <p className="text-muted-foreground text-sm text-balance">
-              Te mandamos un link al correo para elegir una contraseña nueva.
-            </p>
+          <form onSubmit={handleRecovery} className="space-y-5">
             <EmailField email={email} setEmail={setEmail} />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Mail className="size-4" />
-              )}
+            <Button type="submit" className="h-11 w-full" disabled={loading}>
+              {loading ? <Loader2 className="size-4 animate-spin" /> : null}
               Enviar link
             </Button>
           </form>
         ) : (
           <form
             onSubmit={mode === "signin" ? handleSignIn : handleSignUp}
-            className="space-y-3"
+            className="space-y-5"
           >
             {mode === "signup" && (
-              <div className="space-y-1.5">
+              <div className="space-y-2.5">
                 <Label htmlFor="name">Nombre</Label>
                 <Input
                   id="name"
                   placeholder="Tu nombre"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="h-11 px-3 py-2.5"
                 />
               </div>
             )}
@@ -180,9 +183,10 @@ export function LoginForm() {
               autoComplete={
                 mode === "signin" ? "current-password" : "new-password"
               }
+              inputClassName="h-11 px-3 py-2.5"
             />
             {mode === "signin" && (
-              <div className="text-right">
+              <div className="-mt-1 text-right">
                 <button
                   type="button"
                   className="text-muted-foreground hover:text-foreground text-xs transition"
@@ -195,12 +199,8 @@ export function LoginForm() {
                 </button>
               </div>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Lock className="size-4" />
-              )}
+            <Button type="submit" className="h-11 w-full" disabled={loading}>
+              {loading ? <Loader2 className="size-4 animate-spin" /> : null}
               {mode === "signin" ? "Iniciar sesión" : "Crear cuenta"}
             </Button>
           </form>
@@ -252,7 +252,7 @@ function EmailField({
   setEmail: (v: string) => void;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2.5">
       <Label htmlFor="email">Correo electrónico</Label>
       <Input
         id="email"
@@ -263,6 +263,7 @@ function EmailField({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
+        className="h-11 px-3 py-2.5"
       />
     </div>
   );

@@ -17,16 +17,7 @@ interface UseDebtCalculationResult {
   refetch: () => Promise<void>;
 }
 
-/**
- * Trae miembros, gastos (con su reparto) y pagos de un evento, y devuelve
- * el cálculo de saldos + transferencias mínimas para saldar las cuentas.
- *
- * Funciona igual para usuarios reales e invitados gestionados porque todo se
- * referencia por `event_members.id`.
- *
- * Si se recibe `initialData` (precargada en el servidor), se evita el
- * fetch inicial y el skeleton de carga al entrar a la juntada.
- */
+/** Miembros + gastos + pagos de un evento y su cálculo de saldos; `initialData` evita el fetch inicial. */
 export function useDebtCalculation(
   eventId: string | undefined,
   initialData?: EventData,

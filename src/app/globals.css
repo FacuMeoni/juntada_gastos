@@ -46,6 +46,11 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --ease-out: var(--motion-ease-out);
+  --ease-in-out: var(--motion-ease-in-out);
+  --ease-drawer: var(--motion-ease-drawer);
+  --ease-crossfade: var(--motion-ease-crossfade);
 }
 
 /* JuntadasApp — paleta monocromática (OpenPencil Design System B&W) */
@@ -73,7 +78,7 @@
   --chart-3: #737373;
   --chart-4: #a3a3a3;
   --chart-5: #e5e5e5;
-  --radius: 1rem;
+  --radius: 0.625rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #171717;
   --sidebar-primary: #171717;
@@ -89,6 +94,25 @@
   --toast-error-accent: #ef4444;
   --toast-success-icon: #86efac;
   --toast-success-accent: #22c55e;
+
+  /* Curvas propias: las nativas de CSS son demasiado débiles para UI. */
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --motion-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-ease-crossfade: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Profundidad por sombra (no borde): se adapta a cualquier fondo. */
+  --shadow-border:
+    0px 0px 0px 1px oklch(0 0 0 / 0.06),
+    0px 1px 2px -1px oklch(0 0 0 / 0.06),
+    0px 2px 4px 0px oklch(0 0 0 / 0.04);
+  --shadow-border-hover:
+    0px 0px 0px 1px oklch(0 0 0 / 0.08),
+    0px 1px 2px -1px oklch(0 0 0 / 0.08),
+    0px 2px 4px 0px oklch(0 0 0 / 0.06);
+  --shadow-overlay:
+    0px 0px 0px 1px oklch(0 0 0 / 0.06), 0px 16px 40px -12px oklch(0 0 0 / 0.22);
+  --image-outline: oklch(0 0 0 / 0.1);
 }
 
 .dark {
@@ -130,6 +154,13 @@
   --toast-error-accent: #ef4444;
   --toast-success-icon: #86efac;
   --toast-success-accent: #22c55e;
+
+  /* En oscuro las capas de profundidad son invisibles: un solo anillo blanco. */
+  --shadow-border: 0 0 0 1px oklch(1 0 0 / 0.08);
+  --shadow-border-hover: 0 0 0 1px oklch(1 0 0 / 0.13);
+  --shadow-overlay:
+    0 0 0 1px oklch(1 0 0 / 0.08), 0px 16px 40px -12px oklch(0 0 0 / 0.6);
+  --image-outline: oklch(1 0 0 / 0.1);
 }
 
 @layer base {
@@ -156,6 +187,49 @@
 
 .icon-surface {
   @apply bg-muted text-foreground;
+}
+
+/* Entrada escalonada: sólo para momentos infrecuentes (estados vacíos), donde la secuencia comunica jerarquía. */
+.stagger-enter > * {
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(4px);
+  animation: stagger-enter 400ms var(--motion-ease-out) forwards;
+}
+.stagger-enter > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger-enter > *:nth-child(2) {
+  animation-delay: 100ms;
+}
+.stagger-enter > *:nth-child(3) {
+  animation-delay: 200ms;
+}
+
+@keyframes stagger-enter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* Neutro puro a baja opacidad: un outline teñido se lee como suciedad en el borde. */
+.image-ring {
+  outline: 1px solid var(--image-outline);
+  outline-offset: -1px;
+}
+
+/* Menos movimiento, no cero: se conservan opacidad y color, se quita el desplazamiento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-property: opacity, color, background-color, border-color,
+      box-shadow, fill, stroke;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 [data-sonner-toast] {

@@ -65,7 +65,8 @@ function InvitationCard({ invitation }: { invitation: EventInvitation }) {
 
   return (
     <li>
-      <Card className="border-foreground/20">
+      {/* Borde de estado (invitación pendiente), no de profundidad: se queda como borde. */}
+      <Card className="border border-foreground/20">
         <CardContent className="flex items-start gap-3">
           <div className="icon-surface text-foreground flex size-10 shrink-0 items-center justify-center rounded-xl">
             <PartyPopper className="size-5" />

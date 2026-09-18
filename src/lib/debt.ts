@@ -8,16 +8,7 @@ import type {
 } from "@/types";
 import { customAvatarUrl } from "@/lib/avatar";
 
-/**
- * Núcleo de cálculo de deudas — funciones puras, sin React ni Supabase.
- *
- * Trabaja siempre en CENTAVOS (enteros) para evitar errores de redondeo de
- * punto flotante, y convierte a unidades sólo al exponer el resultado.
- *
- * Punto clave del modelo híbrido: todo se calcula sobre `event_members.id`,
- * por lo que es indiferente si el participante tiene `user_id` o es un
- * `guest_name` gestionado a mano.
- */
+/** Cálculo de deudas: funciones puras en centavos (evita redondeo) sobre `event_members.id`. */
 
 const toCents = (amount: number): number => Math.round(amount * 100);
 const toUnits = (cents: number): number => cents / 100;
@@ -66,16 +57,7 @@ export const splitEvenlyUnits = (
   }));
 };
 
-/**
- * Calcula el saldo neto (en centavos) de cada participante.
- *
- *   saldo = pagó_en_gastos − le_corresponde + pagos_emitidos − pagos_recibidos
- *
- *   saldo > 0  => le deben dinero (acreedor)
- *   saldo < 0  => debe dinero (deudor)
- *
- * La suma de todos los saldos siempre es 0.
- */
+/** Saldo neto en centavos: pagó − le corresponde + pagos emitidos − recibidos (>0 acreedor, suma total 0). */
 export const computeBalancesCents = (
   members: Member[],
   expenses: Expense[],

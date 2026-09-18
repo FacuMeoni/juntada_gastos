@@ -50,9 +50,9 @@ export function HomeEventsSection({ cards }: { cards: HomeEventCard[] }) {
         </div>
 
         {cards.length === 0 ? (
-          <Card className="border-dashed bg-transparent shadow-none">
-            <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-              <div className="icon-surface flex size-14 items-center justify-center rounded-2xl">
+          <Card className="border border-dashed bg-transparent shadow-none">
+            <CardContent className="stagger-enter flex flex-col items-center gap-4 py-10 text-center">
+              <div className="icon-surface flex size-14 items-center justify-center rounded-xl">
                 <PartyPopper className="text-muted-foreground size-7" />
               </div>
               <div className="space-y-1">
@@ -72,7 +72,7 @@ export function HomeEventsSection({ cards }: { cards: HomeEventCard[] }) {
             {cards.map((ev) => (
               <li key={ev.id}>
                 <Link href={`/${ev.id}`} className="block">
-                  <Card className="transition-colors hover:bg-muted/40 active:scale-[0.99]">
+                  <Card className="transition-[background-color,box-shadow,scale] duration-150 ease-out hover:bg-muted/40 hover:shadow-(--shadow-border-hover) active:scale-[0.96]">
                     <CardContent className="flex items-center gap-3 p-4">
                       <ChevronRight className="text-muted-foreground size-5 shrink-0" />
                       <div className="min-w-0 flex-1">

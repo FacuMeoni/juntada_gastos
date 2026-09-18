@@ -1,0 +1,48 @@
+---
+description: Server Actions, RLS y migraciones de Supabase
+globs: src/app/actions.ts,src/lib/**/*.ts,supabase/migrations/**/*.sql
+alwaysApply: false
+---
+
+# Datos y Supabase
+
+## Toda escritura pasa por un Server Action
+
+El cliente nunca escribe directo ni recibe la service-role key. Los actions de
+`src/app/actions.ts` validan el usuario de la sesión antes de tocar la base y
+devuelven `ActionResult`, nunca lanzan al cliente.
+
+```typescript
+// ✅ BIEN
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return { error: "No autenticado" };
+```
+
+## RLS es la fuente de verdad de los permisos
+
+Toda tabla nueva necesita RLS habilitado y políticas en la misma migración que
+la crea. Reusá las funciones auxiliares (`is_event_member`, `is_event_owner`) en
+vez de escribir condiciones ad-hoc por tabla.
+
+Si una política de escritura tiene que cubrir al creador de la juntada, incluí
+`is_event_owner`: el dueño no siempre está en `event_members`.
+
+## Migraciones
+
+Una por cambio, con timestamp. **Nunca edites una migración ya aplicada**: para
+revertir, creá una nueva. Los buckets de Storage se crean con
+`on conflict do nothing` y sus políticas van en la misma migración.
+
+## Consultas compartidas
+
+Las columnas que se traen de cada tabla viven en las constantes de
+`src/lib/event-data.ts`, usadas tanto por el layout en servidor como por
+`useDebtCalculation`. Si agregás una columna al dominio, actualizá la constante
+correspondiente o el dato va a faltar en uno de los dos caminos.
+
+## Precarga y refresco
+
+Los datos de la juntada se precargan en `[eventId]/layout.tsx` y entran como
+`initialData`. Después de una mutación usá el `refetch()` del contexto, no
+`router.refresh()`: el refresh remonta el árbol y cierra los diálogos abiertos.
+Usá `Promise.all` para consultas independientes.

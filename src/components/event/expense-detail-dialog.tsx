@@ -67,6 +67,22 @@ export function ExpenseDetailDialog({
             {formatCurrency(expense.amount)}
           </p>
 
+          {expense.receipt_url ? (
+            <a
+              href={expense.receipt_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block overflow-hidden rounded-lg"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={expense.receipt_url}
+                alt={`Ticket de ${expense.description}`}
+                className="image-ring max-h-48 w-full rounded-lg object-cover"
+              />
+            </a>
+          ) : null}
+
           <div className="space-y-3 text-sm">
             <DetailRow label="Pagó">
               <MemberChip member={payer} />

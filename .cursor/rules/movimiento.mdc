@@ -1,0 +1,56 @@
+---
+description: Reglas de animación y feedback de interacción
+globs: src/**/*.tsx,src/**/*.css
+alwaysApply: false
+---
+
+# Movimiento
+
+## Antes de animar, decidí si corresponde
+
+Cuántas veces por sesión lo va a ver el usuario:
+
+| Frecuencia | Decisión |
+| --- | --- |
+| Alta (tabs, hover de fila, toggles) | Feedback instantáneo o ≤ 150 ms de color |
+| Ocasional (modales, sheets, toasts) | Animación estándar |
+| Rara (estado vacío, éxito, onboarding) | Puede tener entrada escalonada |
+
+Nunca animes acciones iniciadas por teclado.
+
+## Presupuesto de duración
+
+Press 150 ms · tabs 100 ms · dropdowns 150 ms · modales 200/150 ms ·
+sheets 300/200 ms. **La salida siempre más corta que la entrada.**
+
+## Curvas
+
+Usá `ease-out` (mapeada a la curva fuerte del sistema) o los tokens
+`--motion-ease-*`. **Nunca `ease-in` en UI:** arranca lento justo cuando el
+usuario está mirando.
+
+## Nombrá las propiedades
+
+```tsx
+// ❌ MAL
+className="transition-all duration-300"
+
+// ✅ BIEN
+className="transition-[background-color,box-shadow,scale] duration-150 ease-out"
+```
+
+## Feedback de press
+
+Todo elemento presionable escala a `0.96` exacto. `Button` ya lo trae; usá
+`static` para apagarlo. Para elementos propios: `active:scale-[0.96]`.
+
+## Transiciones, no keyframes, en UI interactiva
+
+Las transiciones se retarguetean a mitad de camino; los keyframes reinician
+desde cero. Reservá keyframes para secuencias de una sola vez (`.stagger-enter`).
+
+## Dos reglas que no se negocian
+
+- Nunca animes desde `scale(0)`. Arrancá en `0.95` o más, con opacidad.
+- El movimiento nunca es el único canal de feedback: todo cambio de estado
+  necesita además un color, un icono o una etiqueta.

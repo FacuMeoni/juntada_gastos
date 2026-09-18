@@ -567,6 +567,7 @@ export async function addExpense(input: {
   description: string;
   amount: number;
   paidBy: string;
+  receiptUrl?: string | null;
   /** Si se omite, se divide en partes iguales entre todos los miembros. */
   splits?: { memberId: string; amount: number }[];
 }): Promise<ActionResult> {
@@ -592,6 +593,7 @@ export async function addExpense(input: {
       created_by: myMember?.id ?? null,
       description,
       amount: input.amount,
+      receipt_url: input.receiptUrl?.trim() || null,
     })
     .select("id")
     .single();

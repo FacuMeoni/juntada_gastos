@@ -90,7 +90,7 @@ function ExpenseRow({ expense }: { expense: Expense }) {
       <li>
         <Card
           size="sm"
-          className="cursor-pointer py-0 transition-colors hover:bg-muted/40"
+          className="cursor-pointer py-0 transition-[background-color,box-shadow,scale] duration-150 ease-out hover:bg-muted/40 hover:shadow-(--shadow-border-hover) active:scale-[0.96]"
           onClick={() => setDetailOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {

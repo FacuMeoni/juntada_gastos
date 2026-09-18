@@ -17,7 +17,8 @@ function Avatar({
       data-slot="avatar"
       data-size={size}
       className={cn(
-        "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
+        // El anillo es un neutro puro a baja opacidad: un gris del tema recogería el fondo y se leería como borde sucio.
+        "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:outline after:-outline-offset-1 after:outline-black/10 data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:outline-white/10",
         className
       )}
       {...props}

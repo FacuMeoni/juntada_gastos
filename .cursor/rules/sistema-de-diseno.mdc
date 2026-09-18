@@ -1,0 +1,49 @@
+---
+description: Tokens y reglas de superficie del sistema de diseño
+globs: src/**/*.tsx,src/**/*.css
+alwaysApply: false
+---
+
+# Sistema de diseño
+
+Referencia completa en `design.md`. No escribas colores, radios ni curvas a mano:
+todo sale de los tokens de `src/app/globals.css`.
+
+## Profundidad por sombra, estructura por borde
+
+Cards, containers, botones delineados y elementos elevados usan sombra. Los
+bordes se reservan para lo que comunica estructura o estado: divisores,
+placeholders discontinuos, outline de inputs y bordes de estado.
+
+```tsx
+// ❌ MAL: borde para dar profundidad
+<div className="rounded-xl border border-border bg-card" />
+
+// ✅ BIEN
+<div className="rounded-xl bg-card shadow-(--shadow-border)" />
+```
+
+`--shadow-overlay` para modales, drawers y dropdowns.
+`hover:shadow-(--shadow-border-hover)` sólo en superficies interactivas.
+
+## Imágenes
+
+Toda imagen lleva `.image-ring`. El anillo es neutro puro (negro o blanco al
+10 %); un gris del tema recoge el fondo y se lee como borde sucio.
+
+## Radio concéntrico
+
+Al anidar superficies con un inset parejo: `radio externo = radio interno +
+padding`. Con más de 24 px de padding, tratá las capas como independientes y
+dejá el token de cada componente.
+
+## Trazo de icono según el peso del texto
+
+| Texto adyacente | Trazo |
+| --- | --- |
+| Regular (400) | 1.5 px |
+| Medium / Semibold | 2 px |
+| Bold | 2.5 px |
+
+Un solo set de iconos (Lucide) por superficie, siempre con `currentColor`: los
+estados salen de CSS, nunca de assets distintos.

@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export function PasswordField({
   id,
@@ -15,6 +16,7 @@ export function PasswordField({
   placeholder = "••••••••",
   minLength = 6,
   required = true,
+  inputClassName,
 }: {
   id: string;
   label?: string;
@@ -24,11 +26,12 @@ export function PasswordField({
   placeholder?: string;
   minLength?: number;
   required?: boolean;
+  inputClassName?: string;
 }) {
   const [visible, setVisible] = useState(false);
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
       <div className="relative">
         <Input
@@ -40,7 +43,7 @@ export function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           minLength={minLength}
           required={required}
-          className="pr-10"
+          className={cn("pr-10", inputClassName)}
         />
         <Button
           type="button"

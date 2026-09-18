@@ -26,12 +26,33 @@ function getSystemTheme(): "light" | "dark" {
     : "light";
 }
 
+/** Un cambio de tema toca color, fondo, borde y sombra a la vez: sin esto el switch se "unta" en vez de cortar. */
+function withoutTransitions(swap: () => void): void {
+  const style = document.createElement("style");
+  style.append(
+    document.createTextNode("*,*::before,*::after{transition:none !important}"),
+  );
+  document.head.append(style);
+
+  swap();
+
+  // Lectura con efecto colateral: fuerza el reflow para que los colores nuevos
+  // se resuelvan mientras el override sigue en el documento.
+  void document.body.offsetHeight;
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => style.remove());
+  });
+}
+
 function applyTheme(theme: Theme): "light" | "dark" {
   const resolved = theme === "system" ? getSystemTheme() : theme;
-  const root = document.documentElement;
-  root.classList.remove("light", "dark");
-  root.classList.add(resolved);
-  root.style.colorScheme = resolved;
+  withoutTransitions(() => {
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(resolved);
+    root.style.colorScheme = resolved;
+  });
   return resolved;
 }
 

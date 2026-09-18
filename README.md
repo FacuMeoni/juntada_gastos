@@ -8,6 +8,14 @@ PWA mobile-first para dividir gastos entre amigos (viajes, asados, eventos) y sa
 - **Tailwind CSS v4** + **shadcn/ui** (Base UI) + **Lucide**
 - **Supabase** (Auth, Postgres + RLS, Storage)
 
+## Documentación
+
+| Archivo | Contenido |
+| --- | --- |
+| [`Plan.md`](./Plan.md) | Plan de ejecución: alcance, stack y fases de trabajo |
+| [`design.md`](./design.md) | Sistema de diseño, tokens y reglas de pulido |
+| [`.cursor/rules/`](./.cursor/rules) | Reglas del agente por área (dominio, diseño, movimiento, datos, estilo) |
+
 ## Arquitectura de datos (modelo híbrido)
 
 El corazón del sistema es la tabla **`event_members`**, que une un evento con una persona:

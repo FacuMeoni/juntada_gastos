@@ -1,12 +1,7 @@
 import { getFrequentContacts, type ActionResult } from "@/app/actions";
 import type { FrequentContact } from "@/types";
 
-/**
- * Cachea en memoria (por sesión de pestaña) el resultado de
- * `getFrequentContacts`, compartido entre `CreateEventDialog` e
- * `InviteFriendsSection`. Evita refetchear la misma lista cada vez que se
- * abre un diálogo de invitación durante la misma visita.
- */
+/** Caché en memoria de `getFrequentContacts`, compartida entre los diálogos de invitación. */
 
 let cached: Promise<ActionResult<FrequentContact[]>> | null = null;
 let cachedAt = 0;

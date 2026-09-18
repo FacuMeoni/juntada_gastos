@@ -1,11 +1,4 @@
--- =============================================================================
--- JuntadasApp — Esquema de base de datos (Supabase / PostgreSQL)
--- =============================================================================
--- Modelo híbrido: un participante de un evento (event_member) puede ser un
--- usuario real (con cuenta) o un invitado gestionado a mano (guest_name).
--- expenses y payments SIEMPRE referencian event_members.id, nunca users.id,
--- para que los cálculos de saldos funcionen igual en ambos casos.
--- =============================================================================
+-- JuntadasApp — esquema base: event_members une usuarios reales e invitados; expenses/payments siempre lo referencian.
 
 -- Extensiones --------------------------------------------------------------
 create extension if not exists "pgcrypto";

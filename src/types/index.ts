@@ -1,11 +1,4 @@
-/**
- * Tipos del dominio de JuntadasApp.
- * Reflejan 1:1 el esquema de `supabase/schema.sql`.
- *
- * Regla clave del modelo híbrido: `expenses` y `payments` referencian
- * `event_members.id`, nunca `users.id`. Así los cálculos de saldos funcionan
- * idénticamente para amigos con cuenta y para invitados gestionados a mano.
- */
+/** Tipos del dominio, 1:1 con el esquema: `expenses` y `payments` referencian `event_members.id`, nunca `users.id`. */
 
 /** Perfil real del usuario (1:1 con auth.users). */
 export interface User {
@@ -68,6 +61,8 @@ export interface Expense {
   created_by: string | null;
   description: string;
   amount: number;
+  /** URL pública del ticket/foto adjunta (opcional). */
+  receipt_url: string | null;
   created_at: string;
   /** Reparto opcional; si está vacío se divide en partes iguales. */
   splits?: ExpenseSplit[];

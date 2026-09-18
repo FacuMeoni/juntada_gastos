@@ -16,7 +16,7 @@ export interface EventData {
 const MEMBERS_SELECT =
   "id, event_id, user_id, guest_name, status, invited_by, created_at, user:users!user_id(id, name, avatar_url, alias_cvu)";
 const EXPENSES_SELECT =
-  "id, event_id, paid_by, created_by, description, amount, created_at, splits:expense_splits(id, expense_id, member_id, amount)";
+  "id, event_id, paid_by, created_by, description, amount, receipt_url, created_at, splits:expense_splits(id, expense_id, member_id, amount)";
 const PAYMENTS_SELECT =
   "id, event_id, from_member, to_member, amount, created_at, created_by";
 

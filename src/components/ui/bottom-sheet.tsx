@@ -22,7 +22,7 @@ export function BottomSheetContent({
       side="bottom"
       showCloseButton={false}
       className={cn(
-        "max-h-[92dvh] gap-0 overflow-y-auto rounded-t-[24px] border-0 border-t-0 px-5 pt-3 pb-8 sm:mx-auto sm:max-w-md",
+        "max-h-[92dvh] gap-0 overflow-y-auto rounded-t-xl border-0 border-t-0 px-5 pt-3 pb-8 sm:mx-auto sm:max-w-md",
         className,
       )}
       {...props}
@@ -95,10 +95,11 @@ export function BottomSheetAmountInput({
   ...props
 }: React.ComponentProps<"input">) {
   return (
-    <div className="bg-muted rounded-2xl p-5">
+    <div className="bg-muted rounded-xl px-4 py-3.5">
       <input
         className={cn(
-          "placeholder:text-muted-foreground/60 w-full bg-transparent text-4xl leading-none font-bold tracking-tight tabular-nums outline-none",
+          "placeholder:text-muted-foreground/60 w-full bg-transparent text-3xl leading-none font-bold tracking-tight tabular-nums outline-none",
+          "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           className,
         )}
         inputMode="decimal"
@@ -115,7 +116,7 @@ export function BottomSheetInput({
   return (
     <input
       className={cn(
-        "border-border bg-card placeholder:text-muted-foreground w-full rounded-xl border px-3.5 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        "border-border bg-card placeholder:text-muted-foreground w-full rounded-lg border px-3.5 py-3.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         className,
       )}
       {...props}
@@ -130,7 +131,7 @@ export function BottomSheetSearchInput({
   return (
     <input
       className={cn(
-        "border-border bg-card placeholder:text-muted-foreground w-full rounded-xl border px-3 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        "border-border bg-card placeholder:text-muted-foreground w-full rounded-lg border px-3 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         className,
       )}
       {...props}
@@ -148,7 +149,8 @@ export function BottomSheetPill({
     <button
       type="button"
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] transition-colors select-none",
+        // Toggle de alta frecuencia: feedback casi inmediato, sin animación propia.
+        "inline-flex items-center gap-1.5 rounded-sm px-3.5 py-2 text-[13px] transition-[background-color,color,scale] duration-100 ease-out select-none active:scale-[0.96]",
         active
           ? "bg-primary text-primary-foreground font-medium"
           : "bg-muted text-foreground hover:bg-muted/80",
@@ -170,7 +172,8 @@ export function BottomSheetPrimaryButton({
   return (
     <Button
       className={cn(
-        "h-12 w-full rounded-xl text-base font-bold",
+        // Trazo 2.5 para acompañar el peso bold de la etiqueta.
+        "h-12 w-full rounded-lg text-base font-bold [&_svg]:stroke-[2.5]",
         className,
       )}
       disabled={loading || props.disabled}

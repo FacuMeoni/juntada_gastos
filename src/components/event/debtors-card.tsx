@@ -28,7 +28,7 @@ export function DebtorsCard() {
         </h2>
         <Link
           href={`/${eventId}/saldar`}
-          className="text-muted-foreground hover:text-foreground text-[11px] transition-colors"
+          className="text-muted-foreground hover:text-foreground text-[11px] transition-[color] duration-150 ease-out"
         >
           Ver todo ›
         </Link>

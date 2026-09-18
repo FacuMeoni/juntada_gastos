@@ -74,7 +74,7 @@ export function ProfilePageShell({
         title="Mi perfil"
         onBack={() => navigateAway("/")}
         action={
-          <ThemeToggle className="bg-card size-10 shrink-0 rounded-xl border border-border shadow-none" />
+          <ThemeToggle className="bg-card size-10 shrink-0 rounded-xl shadow-(--shadow-border)" />
         }
       />
 

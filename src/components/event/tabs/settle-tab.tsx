@@ -87,8 +87,8 @@ export function SettleTab() {
             />
           </div>
           {(debt?.transfers.length ?? 0) === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
+            <Card className="border border-dashed shadow-none">
+              <CardContent className="stagger-enter flex flex-col items-center gap-2 py-8 text-center">
                 <PartyPopper className="text-foreground size-7" />
                 <p className="font-medium">¡Cuentas saldadas!</p>
                 <p className="text-muted-foreground text-sm">

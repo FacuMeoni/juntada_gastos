@@ -162,7 +162,7 @@ export default async function HomePage() {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <PwaInstallDialog />
-          <ThemeToggle className="bg-card size-10 shrink-0 rounded-xl border border-border shadow-none" />
+          <ThemeToggle className="bg-card size-10 shrink-0 rounded-xl shadow-(--shadow-border)" />
         </div>
       </header>
 

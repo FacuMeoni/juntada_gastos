@@ -195,7 +195,7 @@ export function PwaInstallDialog() {
           <Button
             variant="ghost"
             size="icon"
-            className="bg-card size-10 shrink-0 rounded-xl border border-border shadow-none"
+            className="bg-card size-10 shrink-0 rounded-xl shadow-(--shadow-border)"
             aria-label="Instalar app en el teléfono"
           />
         }

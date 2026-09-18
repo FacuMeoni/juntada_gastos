@@ -13,7 +13,7 @@ export function EventHeader() {
       <Link
         href="/"
         aria-label="Volver al inicio"
-        className="text-foreground hover:bg-muted flex size-6 shrink-0 items-center justify-center rounded-full transition-colors"
+        className="text-foreground hover:bg-muted flex size-6 shrink-0 items-center justify-center rounded-full transition-[background-color,color,scale] duration-150 ease-out active:scale-[0.96]"
       >
         <ChevronLeft className="size-[22px]" strokeWidth={2} />
       </Link>

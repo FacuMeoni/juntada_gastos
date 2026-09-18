@@ -32,7 +32,8 @@ export function EventTabs({ eventId }: { eventId: string }) {
             href={href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "relative shrink-0 px-3 py-2.5 text-sm transition-colors select-none",
+              // Navegación de alta frecuencia: sólo color y al mínimo, sin escala ni entrada propia.
+              "relative shrink-0 px-3 py-2.5 text-sm transition-[color] duration-100 ease-out select-none",
               isActive
                 ? "font-medium text-foreground"
                 : "font-normal text-muted-foreground hover:text-foreground",

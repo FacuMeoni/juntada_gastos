@@ -20,7 +20,7 @@ export function PageBackHeader({
   className?: string;
 }) {
   const backClassName =
-    "text-foreground hover:bg-muted flex size-6 shrink-0 items-center justify-center rounded-full transition-colors";
+    "text-foreground hover:bg-muted flex size-6 shrink-0 items-center justify-center rounded-full transition-[background-color,color,scale] duration-150 ease-out active:scale-[0.96]";
 
   return (
     <header

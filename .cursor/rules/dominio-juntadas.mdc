@@ -1,0 +1,48 @@
+---
+description: Reglas del dominio de JuntadasApp — modelo híbrido y aritmética de dinero
+alwaysApply: true
+---
+
+# Dominio: participantes y dinero
+
+## `event_members` es la única identidad de un participante
+
+`expenses` y `payments` referencian **`event_members.id`**, nunca `users.id`. Un
+participante puede tener cuenta (`user_id` no nulo) o ser gestionado a mano
+(`user_id` nulo + `guest_name`).
+
+Nunca escribas lógica de dinero que se bifurque según si el participante tiene
+cuenta. Si aparece esa rama, el modelo se está usando mal.
+
+```typescript
+// ❌ MAL: el cálculo depende de si hay cuenta
+const id = member.user_id ?? member.guest_name;
+add(id, cents);
+
+// ✅ BIEN: siempre el id del miembro del evento
+add(member.id, cents);
+```
+
+Para mostrar el nombre usá siempre `memberDisplayName(member)` de
+`src/lib/debt.ts`, que resuelve perfil real e invitado.
+
+## Todo cálculo va en centavos enteros
+
+Los montos se convierten a centavos al entrar al cálculo y a unidades sólo al
+exponer el resultado. Al repartir, los centavos sobrantes se distribuyen entre
+los primeros miembros para que la suma de las porciones sea exactamente igual al
+total.
+
+```typescript
+// ❌ MAL: pierde centavos y los saldos no cierran en cero
+const share = amount / members.length;
+
+// ✅ BIEN
+const shares = splitEvenlyUnits(amount, memberIds);
+```
+
+Invariante a respetar: **la suma de todos los saldos de una juntada es siempre
+exactamente 0**. Si un cambio la rompe, el cambio está mal.
+
+`src/lib/debt.ts` es un núcleo puro: sin React, sin Supabase, sin `async`.
+Después de tocarlo, corré `npx tsx scripts/check-debt.mts`.

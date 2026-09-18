@@ -1,0 +1,55 @@
+---
+description: Convenciones de código, comentarios y verificación antes de cerrar
+alwaysApply: true
+---
+
+# Estilo de código
+
+## Comentarios: una línea, y sólo si hacen falta
+
+Un comentario existe para decir lo que el código no puede mostrar: una
+restricción, un valor exacto que no se puede aproximar, un efecto colateral
+necesario. Nunca para narrar la línea siguiente ni para justificar el cambio
+ante quien revisa.
+
+Máximo un renglón. Si necesitás más, el lugar es `design.md` o `Plan.md`.
+
+```typescript
+// ❌ MAL
+/**
+ * Esta función recorre los miembros y para cada uno calcula
+ * su saldo sumando lo que pagó y restando lo que le toca.
+ * Se usa desde el hook y desde el script de verificación.
+ */
+
+// ✅ BIEN
+/** Saldo neto en centavos: pagó − le corresponde + pagos emitidos − recibidos. */
+```
+
+Los comentarios van en español, como el resto del proyecto.
+
+## TypeScript
+
+Modo estricto. Tipos explícitos en los límites (props, retorno de actions,
+parámetros públicos). Nada de `any`: si un tipo de Supabase no encaja, acotá el
+`unknown` con un type guard.
+
+## Componentes
+
+Functional components con arrow functions o `function`, según lo que ya use el
+archivo. Early returns antes de anidar. `useMemo` sólo cuando el cálculo es real,
+no por reflejo. Extraé a un hook cuando la lógica se repite, no antes.
+
+## Next.js
+
+Esta versión tiene cambios de API respecto de lo que el modelo tiene aprendido.
+Antes de escribir código de framework, leé la guía correspondiente en
+`node_modules/next/dist/docs/`.
+
+## Antes de cerrar un cambio
+
+```bash
+npx tsc --noEmit && npm run lint && npm run build
+```
+
+Si tocaste `src/lib/debt.ts`, agregá `npx tsx scripts/check-debt.mts`.

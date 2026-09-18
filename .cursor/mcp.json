@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "openpencil": {
+      "command": "/Users/facumeoni/.nvm/versions/node/v20.17.0/bin/openpencil-mcp"
+    }
+  }
+}
